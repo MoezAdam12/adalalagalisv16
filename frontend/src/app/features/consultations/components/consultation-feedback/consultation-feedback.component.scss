@@ -1,0 +1,155 @@
+.feedback-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.loading-text {
+  margin-top: 10px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.error-message {
+  color: #f44336;
+  margin-bottom: 10px;
+}
+
+.feedback-content {
+  margin-top: 20px;
+}
+
+.form-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.rating-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rating-label {
+  font-weight: 500;
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+}
+
+.star-rating button {
+  margin: 0;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.star-rating mat-icon {
+  font-size: 32px;
+  height: 32px;
+  width: 32px;
+}
+
+.rating-error {
+  color: #f44336;
+  font-size: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.feedback-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.feedback-info mat-icon {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.feedback-info p {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 14px;
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] .header-section {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .page-title {
+  margin-right: 10px;
+  margin-left: 0;
+}
+
+[dir="rtl"] .form-actions {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .feedback-info {
+  flex-direction: row-reverse;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .star-rating button {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .star-rating mat-icon {
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+  }
+}

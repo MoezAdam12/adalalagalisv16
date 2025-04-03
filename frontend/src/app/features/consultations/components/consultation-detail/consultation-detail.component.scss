@@ -1,0 +1,421 @@
+.consultation-detail-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.loading-text {
+  margin-top: 10px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.error-message {
+  color: #f44336;
+  margin-bottom: 10px;
+}
+
+.consultation-content {
+  margin-top: 20px;
+}
+
+.consultation-header {
+  margin-bottom: 20px;
+}
+
+.status-section {
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-scheduled {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-in-progress {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-cancelled {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+.status-rescheduled {
+  background-color: #fff8e1;
+  color: #f57f17;
+}
+
+.status-no-show {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.consultation-title {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.consultation-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-item mat-icon {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.unassigned {
+  color: rgba(0, 0, 0, 0.54);
+  font-style: italic;
+}
+
+.consultation-tabs {
+  margin-top: 20px;
+}
+
+.tab-content {
+  padding: 20px 0;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.detail-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.description {
+  white-space: pre-line;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  padding: 4px 8px;
+  background-color: #f5f5f5;
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+.add-note-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.note-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.notes-list-section {
+  margin-top: 24px;
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.note-card {
+  margin-bottom: 0;
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.note-author {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.note-date {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.note-privacy mat-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.note-content {
+  white-space: pre-line;
+}
+
+.add-attachment-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.attachments-list-section {
+  margin-top: 24px;
+}
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.attachment-card {
+  margin-bottom: 0;
+}
+
+.attachment-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.attachment-icon mat-icon {
+  font-size: 40px;
+  height: 40px;
+  width: 40px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.attachment-info {
+  flex-grow: 1;
+}
+
+.attachment-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.attachment-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+  margin-bottom: 4px;
+}
+
+.private-label mat-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
+}
+
+.attachment-description {
+  margin-bottom: 4px;
+}
+
+.attachment-upload-info {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.feedback-section {
+  margin-top: 24px;
+}
+
+.feedback-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feedback-item {
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.feedback-author {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.feedback-date {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.feedback-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rating-stars mat-icon {
+  color: rgba(0, 0, 0, 0.24);
+}
+
+.rating-stars mat-icon.filled {
+  color: #ffc107;
+}
+
+.empty-list {
+  padding: 16px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.54);
+  font-style: italic;
+}
+
+.delete-action {
+  color: #f44336;
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] .header-section {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .page-title {
+  margin-right: 10px;
+  margin-left: 0;
+}
+
+[dir="rtl"] .meta-item {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .note-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .note-author {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .attachment-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .feedback-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .feedback-author {
+  flex-direction: row-reverse;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .consultation-meta {
+    grid-template-columns: 1fr;
+  }
+  
+  .note-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .attachment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .attachment-actions {
+    align-self: flex-end;
+  }
+}

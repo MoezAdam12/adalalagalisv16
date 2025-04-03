@@ -1,0 +1,343 @@
+// frontend/src/app/features/financial/components/financial-dashboard/financial-dashboard.component.html
+
+<div class="financial-dashboard">
+  <div class="dashboard-header">
+    <h1>لوحة المعلومات المالية</h1>
+    <div class="actions">
+      <button mat-raised-button color="primary" routerLink="/financial/reports">
+        <mat-icon>assessment</mat-icon>
+        التقارير المالية
+      </button>
+    </div>
+  </div>
+
+  <!-- Financial Summary Cards -->
+  <div class="summary-cards">
+    <mat-card *ngIf="loading.summary">
+      <mat-card-content class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>جاري تحميل البيانات المالية...</p>
+      </mat-card-content>
+    </mat-card>
+
+    <div *ngIf="!loading.summary && !error.summary" class="cards-grid">
+      <mat-card class="summary-card revenue">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div class="card-data">
+            <h3>إجمالي الإيرادات</h3>
+            <p class="amount">{{ financialSummary.totalRevenue | currency:'SAR':'symbol':'1.0-0' }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card expenses">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>trending_down</mat-icon>
+          </div>
+          <div class="card-data">
+            <h3>إجمالي المصروفات</h3>
+            <p class="amount">{{ financialSummary.totalExpenses | currency:'SAR':'symbol':'1.0-0' }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card profit">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>account_balance</mat-icon>
+          </div>
+          <div class="card-data">
+            <h3>صافي الدخل</h3>
+            <p class="amount" [ngClass]="{'positive': financialSummary.netIncome >= 0, 'negative': financialSummary.netIncome < 0}">
+              {{ financialSummary.netIncome | currency:'SAR':'symbol':'1.0-0' }}
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card ar">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>receipt</mat-icon>
+          </div>
+          <div class="card-data">
+            <h3>الذمم المدينة</h3>
+            <p class="amount">{{ financialSummary.accountsReceivable | currency:'SAR':'symbol':'1.0-0' }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card ap">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>payment</mat-icon>
+          </div>
+          <div class="card-data">
+            <h3>الذمم الدائنة</h3>
+            <p class="amount">{{ financialSummary.accountsPayable | currency:'SAR':'symbol':'1.0-0' }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card cash">
+        <mat-card-content>
+          <div class="card-icon">
+            <mat-icon>local_atm</mat-icon>
+          </div>
+          <div class="card-data">
+            <h3>رصيد النقد</h3>
+            <p class="amount">{{ financialSummary.cashBalance | currency:'SAR':'symbol':'1.0-0' }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-card *ngIf="!loading.summary && error.summary" class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error</mat-icon>
+        <p>حدث خطأ أثناء تحميل البيانات المالية. يرجى المحاولة مرة أخرى.</p>
+        <button mat-button color="primary" (click)="loadFinancialSummary()">إعادة المحاولة</button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="chart-container">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>الإيرادات والمصروفات (6 أشهر)</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loading.charts" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>جاري تحميل البيانات...</p>
+          </div>
+          <div *ngIf="!loading.charts && !error.charts" class="chart">
+            <!-- Revenue/Expense Chart would be rendered here using a chart library -->
+            <canvas id="revenueExpenseChart"></canvas>
+          </div>
+          <div *ngIf="!loading.charts && error.charts" class="error-container">
+            <mat-icon color="warn">error</mat-icon>
+            <p>حدث خطأ أثناء تحميل بيانات الرسم البياني.</p>
+            <button mat-button color="primary" (click)="loadChartsData()">إعادة المحاولة</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="chart-container">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>حالة الفواتير</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loading.charts" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>جاري تحميل البيانات...</p>
+          </div>
+          <div *ngIf="!loading.charts && !error.charts" class="chart">
+            <!-- Invoice Status Chart would be rendered here using a chart library -->
+            <canvas id="invoiceStatusChart"></canvas>
+          </div>
+          <div *ngIf="!loading.charts && error.charts" class="error-container">
+            <mat-icon color="warn">error</mat-icon>
+            <p>حدث خطأ أثناء تحميل بيانات الرسم البياني.</p>
+            <button mat-button color="primary" (click)="loadChartsData()">إعادة المحاولة</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Recent Activity Section -->
+  <div class="recent-activity">
+    <div class="recent-invoices">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>أحدث الفواتير</mat-card-title>
+          <div class="header-actions">
+            <a mat-button color="primary" routerLink="/financial/invoices">عرض الكل</a>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loading.invoices" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>جاري تحميل الفواتير...</p>
+          </div>
+          
+          <table *ngIf="!loading.invoices && !error.invoices && recentInvoices.length > 0" mat-table [dataSource]="recentInvoices" class="mat-elevation-z0">
+            <!-- Invoice Number Column -->
+            <ng-container matColumnDef="invoice_number">
+              <th mat-header-cell *matHeaderCellDef>رقم الفاتورة</th>
+              <td mat-cell *matCellDef="let invoice">
+                <a [routerLink]="['/financial/invoices', invoice._id]">{{ invoice.invoice_number }}</a>
+              </td>
+            </ng-container>
+
+            <!-- Client Column -->
+            <ng-container matColumnDef="client">
+              <th mat-header-cell *matHeaderCellDef>العميل</th>
+              <td mat-cell *matCellDef="let invoice">{{ invoice.client_id?.name }}</td>
+            </ng-container>
+
+            <!-- Date Column -->
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>التاريخ</th>
+              <td mat-cell *matCellDef="let invoice">{{ invoice.invoice_date | date:'mediumDate' }}</td>
+            </ng-container>
+
+            <!-- Amount Column -->
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>المبلغ</th>
+              <td mat-cell *matCellDef="let invoice">{{ invoice.total_amount | currency:'SAR':'symbol':'1.0-0' }}</td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>الحالة</th>
+              <td mat-cell *matCellDef="let invoice">
+                <span class="status-badge" [ngClass]="invoice.status">
+                  {{ invoice.status === 'paid' ? 'مدفوعة' : 
+                     invoice.status === 'partially_paid' ? 'مدفوعة جزئياً' : 
+                     invoice.status === 'sent' ? 'غير مدفوعة' : 
+                     invoice.status === 'overdue' ? 'متأخرة' : 
+                     invoice.status === 'draft' ? 'مسودة' : 
+                     invoice.status === 'cancelled' ? 'ملغاة' : invoice.status }}
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['invoice_number', 'client', 'date', 'amount', 'status']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['invoice_number', 'client', 'date', 'amount', 'status'];"></tr>
+          </table>
+
+          <div *ngIf="!loading.invoices && !error.invoices && recentInvoices.length === 0" class="empty-state">
+            <mat-icon>receipt</mat-icon>
+            <p>لا توجد فواتير حديثة</p>
+            <button mat-button color="primary" routerLink="/financial/invoices/new">إنشاء فاتورة جديدة</button>
+          </div>
+
+          <div *ngIf="!loading.invoices && error.invoices" class="error-container">
+            <mat-icon color="warn">error</mat-icon>
+            <p>حدث خطأ أثناء تحميل الفواتير.</p>
+            <button mat-button color="primary" (click)="loadRecentInvoices()">إعادة المحاولة</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="recent-expenses">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>أحدث المصروفات</mat-card-title>
+          <div class="header-actions">
+            <a mat-button color="primary" routerLink="/financial/expenses">عرض الكل</a>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loading.expenses" class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>جاري تحميل المصروفات...</p>
+          </div>
+          
+          <table *ngIf="!loading.expenses && !error.expenses && recentExpenses.length > 0" mat-table [dataSource]="recentExpenses" class="mat-elevation-z0">
+            <!-- Expense Number Column -->
+            <ng-container matColumnDef="expense_number">
+              <th mat-header-cell *matHeaderCellDef>رقم المصروف</th>
+              <td mat-cell *matCellDef="let expense">
+                <a [routerLink]="['/financial/expenses', expense._id]">{{ expense.expense_number }}</a>
+              </td>
+            </ng-container>
+
+            <!-- Category Column -->
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef>الفئة</th>
+              <td mat-cell *matCellDef="let expense">{{ expense.category_id?.name }}</td>
+            </ng-container>
+
+            <!-- Date Column -->
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>التاريخ</th>
+              <td mat-cell *matCellDef="let expense">{{ expense.expense_date | date:'mediumDate' }}</td>
+            </ng-container>
+
+            <!-- Amount Column -->
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>المبلغ</th>
+              <td mat-cell *matCellDef="let expense">{{ expense.total_amount | currency:'SAR':'symbol':'1.0-0' }}</td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>الحالة</th>
+              <td mat-cell *matCellDef="let expense">
+                <span class="status-badge" [ngClass]="expense.approval_status">
+                  {{ expense.approval_status === 'approved' ? 'معتمد' : 
+                     expense.approval_status === 'pending' ? 'قيد الانتظار' : 
+                     expense.approval_status === 'rejected' ? 'مرفوض' : expense.approval_status }}
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['expense_number', 'category', 'date', 'amount', 'status']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['expense_number', 'category', 'date', 'amount', 'status'];"></tr>
+          </table>
+
+          <div *ngIf="!loading.expenses && !error.expenses && recentExpenses.length === 0" class="empty-state">
+            <mat-icon>receipt</mat-icon>
+            <p>لا توجد مصروفات حديثة</p>
+            <button mat-button color="primary" routerLink="/financial/expenses/new">إنشاء مصروف جديد</button>
+          </div>
+
+          <div *ngIf="!loading.expenses && error.expenses" class="error-container">
+            <mat-icon color="warn">error</mat-icon>
+            <p>حدث خطأ أثناء تحميل المصروفات.</p>
+            <button mat-button color="primary" (click)="loadRecentExpenses()">إعادة المحاولة</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>إجراءات سريعة</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="actions-grid">
+          <button mat-raised-button color="primary" routerLink="/financial/invoices/new">
+            <mat-icon>add</mat-icon>
+            فاتورة جديدة
+          </button>
+          <button mat-raised-button color="primary" routerLink="/financial/expenses/new">
+            <mat-icon>add</mat-icon>
+            مصروف جديد
+          </button>
+          <button mat-raised-button color="primary" routerLink="/financial/payments/new">
+            <mat-icon>add</mat-icon>
+            دفعة جديدة
+          </button>
+          <button mat-raised-button color="primary" routerLink="/financial/journal-entries/new">
+            <mat-icon>add</mat-icon>
+            قيد محاسبي جديد
+          </button>
+          <button mat-raised-button color="primary" routerLink="/financial/reports">
+            <mat-icon>assessment</mat-icon>
+            التقارير المالية
+          </button>
+          <button mat-raised-button color="primary" routerLink="/financial/accounts/chart">
+            <mat-icon>account_balance</mat-icon>
+            مخطط الحسابات
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,340 @@
+<div class="employee-form-container">
+  <div class="card">
+    <div class="card-header">
+      <h3>{{ isEditMode ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد' }}</h3>
+    </div>
+    <div class="card-body">
+      <div *ngIf="isLoading" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">جاري التحميل...</span>
+        </div>
+      </div>
+      
+      <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="first_name">الاسم الأول</label>
+              <input 
+                type="text" 
+                id="first_name" 
+                class="form-control" 
+                formControlName="first_name"
+                [ngClass]="{'is-invalid': employeeForm.get('first_name').invalid && employeeForm.get('first_name').touched}"
+              >
+              <div class="invalid-feedback" *ngIf="employeeForm.get('first_name').invalid && employeeForm.get('first_name').touched">
+                الاسم الأول مطلوب
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="last_name">الاسم الأخير</label>
+              <input 
+                type="text" 
+                id="last_name" 
+                class="form-control" 
+                formControlName="last_name"
+                [ngClass]="{'is-invalid': employeeForm.get('last_name').invalid && employeeForm.get('last_name').touched}"
+              >
+              <div class="invalid-feedback" *ngIf="employeeForm.get('last_name').invalid && employeeForm.get('last_name').touched">
+                الاسم الأخير مطلوب
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="email">البريد الإلكتروني</label>
+              <input 
+                type="email" 
+                id="email" 
+                class="form-control" 
+                formControlName="email"
+                [ngClass]="{'is-invalid': employeeForm.get('email').invalid && employeeForm.get('email').touched}"
+              >
+              <div class="invalid-feedback" *ngIf="employeeForm.get('email').invalid && employeeForm.get('email').touched">
+                البريد الإلكتروني مطلوب وبصيغة صحيحة
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="phone">رقم الهاتف</label>
+              <input 
+                type="tel" 
+                id="phone" 
+                class="form-control" 
+                formControlName="phone"
+              >
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="birth_date">تاريخ الميلاد</label>
+              <input 
+                type="date" 
+                id="birth_date" 
+                class="form-control" 
+                formControlName="birth_date"
+              >
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="gender">الجنس</label>
+              <select 
+                id="gender" 
+                class="form-control" 
+                formControlName="gender"
+              >
+                <option [ngValue]="null">اختر الجنس</option>
+                <option *ngFor="let option of genderOptions" [value]="option.value">{{ option.label }}</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="nationality">الجنسية</label>
+              <input 
+                type="text" 
+                id="nationality" 
+                class="form-control" 
+                formControlName="nationality"
+              >
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="id_number">رقم الهوية/الإقامة</label>
+              <input 
+                type="text" 
+                id="id_number" 
+                class="form-control" 
+                formControlName="id_number"
+              >
+            </div>
+          </div>
+        </div>
+        
+        <div class="card mb-3">
+          <div class="card-header">
+            <h5>العنوان</h5>
+          </div>
+          <div class="card-body" formGroupName="address">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="street">الشارع</label>
+                  <input 
+                    type="text" 
+                    id="street" 
+                    class="form-control" 
+                    formControlName="street"
+                  >
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="city">المدينة</label>
+                  <input 
+                    type="text" 
+                    id="city" 
+                    class="form-control" 
+                    formControlName="city"
+                  >
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="state">المنطقة/المحافظة</label>
+                  <input 
+                    type="text" 
+                    id="state" 
+                    class="form-control" 
+                    formControlName="state"
+                  >
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="postal_code">الرمز البريدي</label>
+                  <input 
+                    type="text" 
+                    id="postal_code" 
+                    class="form-control" 
+                    formControlName="postal_code"
+                  >
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="country">الدولة</label>
+                  <input 
+                    type="text" 
+                    id="country" 
+                    class="form-control" 
+                    formControlName="country"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card mb-3">
+          <div class="card-header">
+            <h5>معلومات العمل</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="hire_date">تاريخ التعيين</label>
+                  <input 
+                    type="date" 
+                    id="hire_date" 
+                    class="form-control" 
+                    formControlName="hire_date"
+                    [ngClass]="{'is-invalid': employeeForm.get('hire_date').invalid && employeeForm.get('hire_date').touched}"
+                  >
+                  <div class="invalid-feedback" *ngIf="employeeForm.get('hire_date').invalid && employeeForm.get('hire_date').touched">
+                    تاريخ التعيين مطلوب
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="contract_end_date">تاريخ انتهاء العقد</label>
+                  <input 
+                    type="date" 
+                    id="contract_end_date" 
+                    class="form-control" 
+                    formControlName="contract_end_date"
+                  >
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="job_title">المسمى الوظيفي</label>
+                  <input 
+                    type="text" 
+                    id="job_title" 
+                    class="form-control" 
+                    formControlName="job_title"
+                    [ngClass]="{'is-invalid': employeeForm.get('job_title').invalid && employeeForm.get('job_title').touched}"
+                  >
+                  <div class="invalid-feedback" *ngIf="employeeForm.get('job_title').invalid && employeeForm.get('job_title').touched">
+                    المسمى الوظيفي مطلوب
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="department">القسم</label>
+                  <input 
+                    type="text" 
+                    id="department" 
+                    class="form-control" 
+                    formControlName="department"
+                  >
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="contract_type">نوع العقد</label>
+                  <select 
+                    id="contract_type" 
+                    class="form-control" 
+                    formControlName="contract_type"
+                  >
+                    <option *ngFor="let option of contractTypeOptions" [value]="option.value">{{ option.label }}</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="employment_status">حالة التوظيف</label>
+                  <select 
+                    id="employment_status" 
+                    class="form-control" 
+                    formControlName="employment_status"
+                  >
+                    <option *ngFor="let option of employmentStatusOptions" [value]="option.value">{{ option.label }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="base_salary">الراتب الأساسي</label>
+                  <div class="input-group">
+                    <input 
+                      type="number" 
+                      id="base_salary" 
+                      class="form-control" 
+                      formControlName="base_salary"
+                      step="0.01"
+                      min="0"
+                    >
+                    <div class="input-group-append">
+                      <span class="input-group-text">ريال</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-actions text-left mt-4">
+          <button 
+            type="submit" 
+            class="btn btn-primary ml-2" 
+            [disabled]="isSubmitting"
+          >
+            <i class="fas fa-save"></i> {{ isEditMode ? 'تحديث' : 'حفظ' }}
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="onCancel()"
+          >
+            <i class="fas fa-times"></i> إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

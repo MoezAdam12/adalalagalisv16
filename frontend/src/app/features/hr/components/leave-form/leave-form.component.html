@@ -1,0 +1,170 @@
+<div class="leave-form-container">
+  <div class="card">
+    <div class="card-header">
+      <h3>{{ isEditMode ? 'تعديل طلب إجازة' : 'إنشاء طلب إجازة جديد' }}</h3>
+    </div>
+    <div class="card-body">
+      <div *ngIf="isLoading" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">جاري التحميل...</span>
+        </div>
+      </div>
+      
+      <form [formGroup]="leaveForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="employee_id">الموظف</label>
+              <select 
+                id="employee_id" 
+                class="form-control" 
+                formControlName="employee_id"
+                [ngClass]="{'is-invalid': leaveForm.get('employee_id').invalid && leaveForm.get('employee_id').touched}"
+              >
+                <option [ngValue]="''">اختر الموظف</option>
+                <option *ngFor="let employee of employees" [value]="employee._id">
+                  {{ employee.first_name }} {{ employee.last_name }} - {{ employee.job_title }}
+                </option>
+              </select>
+              <div class="invalid-feedback" *ngIf="leaveForm.get('employee_id').invalid && leaveForm.get('employee_id').touched">
+                يجب اختيار الموظف
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="leave_type">نوع الإجازة</label>
+              <select 
+                id="leave_type" 
+                class="form-control" 
+                formControlName="leave_type"
+                [ngClass]="{'is-invalid': leaveForm.get('leave_type').invalid && leaveForm.get('leave_type').touched}"
+              >
+                <option [ngValue]="''">اختر نوع الإجازة</option>
+                <option *ngFor="let type of leaveTypes" [value]="type._id">
+                  {{ type.name }} {{ type.is_paid ? '' : '(بدون راتب)' }}
+                </option>
+              </select>
+              <div class="invalid-feedback" *ngIf="leaveForm.get('leave_type').invalid && leaveForm.get('leave_type').touched">
+                يجب اختيار نوع الإجازة
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="start_date">تاريخ البداية</label>
+              <input 
+                type="date" 
+                id="start_date" 
+                class="form-control" 
+                formControlName="start_date"
+                [ngClass]="{'is-invalid': leaveForm.get('start_date').invalid && leaveForm.get('start_date').touched}"
+              >
+              <div class="invalid-feedback" *ngIf="leaveForm.get('start_date').invalid && leaveForm.get('start_date').touched">
+                تاريخ البداية مطلوب
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="end_date">تاريخ النهاية</label>
+              <input 
+                type="date" 
+                id="end_date" 
+                class="form-control" 
+                formControlName="end_date"
+                [ngClass]="{'is-invalid': leaveForm.get('end_date').invalid && leaveForm.get('end_date').touched}"
+              >
+              <div class="invalid-feedback" *ngIf="leaveForm.get('end_date').invalid && leaveForm.get('end_date').touched">
+                تاريخ النهاية مطلوب
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="days">عدد الأيام</label>
+              <input 
+                type="number" 
+                id="days" 
+                class="form-control" 
+                formControlName="days"
+                step="0.5"
+                min="0.5"
+                readonly
+              >
+              <small class="form-text text-muted">
+                يتم حساب عدد أيام العمل تلقائياً (باستثناء عطلة نهاية الأسبوع)
+              </small>
+            </div>
+          </div>
+          
+          <div class="col-md-6" *ngIf="isAdmin() && isEditMode">
+            <div class="form-group">
+              <label for="status">الحالة</label>
+              <select 
+                id="status" 
+                class="form-control" 
+                formControlName="status"
+              >
+                <option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <label for="reason">سبب الإجازة</label>
+              <textarea 
+                id="reason" 
+                class="form-control" 
+                formControlName="reason"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row" *ngIf="isAdmin() || isEditMode">
+          <div class="col-md-12">
+            <div class="form-group">
+              <label for="notes">ملاحظات</label>
+              <textarea 
+                id="notes" 
+                class="form-control" 
+                formControlName="notes"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-actions text-left mt-4">
+          <button 
+            type="submit" 
+            class="btn btn-primary ml-2" 
+            [disabled]="isSubmitting"
+          >
+            <i class="fas fa-save"></i> {{ isEditMode ? 'تحديث' : 'حفظ' }}
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="onCancel()"
+          >
+            <i class="fas fa-times"></i> إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

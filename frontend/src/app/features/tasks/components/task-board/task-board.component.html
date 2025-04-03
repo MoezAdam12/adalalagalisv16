@@ -1,0 +1,312 @@
+<div class="board-container">
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" matTooltip="{{ 'COMMON.BACK' | translate }}">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ 'TASKS.TASK_BOARD' | translate }}</h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="createNewTask()">
+        <mat-icon>add</mat-icon>
+        {{ 'TASKS.CREATE_NEW' | translate }}
+      </button>
+      <button mat-icon-button (click)="refreshBoard()" matTooltip="{{ 'COMMON.REFRESH' | translate }}">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-container">
+        <div class="filter-title">{{ 'TASKS.FILTER_BY' | translate }}</div>
+        <div class="filter-options">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'TASKS.ASSIGNEE' | translate }}</mat-label>
+            <mat-select [(value)]="filterByAssignee" (selectionChange)="applyAssigneeFilter($event.value)">
+              <mat-option [value]="null">{{ 'TASKS.ALL_ASSIGNEES' | translate }}</mat-option>
+              <mat-option *ngFor="let user of users" [value]="user.id">
+                {{ user.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'TASKS.PRIORITY' | translate }}</mat-label>
+            <mat-select [(value)]="filterByPriority" (selectionChange)="applyPriorityFilter($event.value)">
+              <mat-option [value]="null">{{ 'TASKS.ALL_PRIORITIES' | translate }}</mat-option>
+              <mat-option *ngFor="let priority of taskPriorities" [value]="priority.value">
+                {{ priority.label | translate }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-button color="primary" (click)="clearFilters()" *ngIf="filterByAssignee || filterByPriority">
+            <mat-icon>clear</mat-icon>
+            {{ 'TASKS.CLEAR_FILTERS' | translate }}
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="loadTasks()">
+      {{ 'COMMON.TRY_AGAIN' | translate }}
+    </button>
+  </div>
+
+  <div class="board-content" *ngIf="!isLoading && !error">
+    <div class="board-columns">
+      <!-- Todo Column -->
+      <div class="board-column">
+        <div class="column-header todo-header">
+          <h3 class="column-title">{{ 'TASKS.STATUS.TODO' | translate }}</h3>
+          <div class="task-count">{{ todoTasks.length }}</div>
+        </div>
+        <div class="column-content" 
+             id="todo-list"
+             cdkDropList
+             [cdkDropListData]="todoTasks"
+             [cdkDropListConnectedTo]="['in-progress-list', 'review-list', 'completed-list', 'blocked-list', 'deferred-list']"
+             (cdkDropListDropped)="drop($event)">
+          <div class="task-card" 
+               *ngFor="let task of todoTasks" 
+               cdkDrag
+               (click)="viewTask(task)">
+            <div class="task-card-content">
+              <div class="task-title" [class.overdue]="isTaskOverdue(task)">
+                <mat-icon *ngIf="isTaskOverdue(task)" class="overdue-icon" matTooltip="{{ 'TASKS.OVERDUE' | translate }}">warning</mat-icon>
+                {{ task.title }}
+              </div>
+              <div class="task-meta">
+                <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                  {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+                </span>
+                <span class="due-date" *ngIf="task.dueDate" [class.overdue]="isTaskOverdue(task)">
+                  {{ task.dueDate | date:'shortDate' }}
+                </span>
+              </div>
+              <div class="task-assignee" *ngIf="task.assignedToName">
+                <mat-icon>person</mat-icon>
+                {{ task.assignedToName }}
+              </div>
+            </div>
+          </div>
+          <div class="empty-column" *ngIf="todoTasks.length === 0">
+            {{ 'TASKS.NO_TASKS' | translate }}
+          </div>
+        </div>
+      </div>
+
+      <!-- In Progress Column -->
+      <div class="board-column">
+        <div class="column-header in-progress-header">
+          <h3 class="column-title">{{ 'TASKS.STATUS.IN_PROGRESS' | translate }}</h3>
+          <div class="task-count">{{ inProgressTasks.length }}</div>
+        </div>
+        <div class="column-content" 
+             id="in-progress-list"
+             cdkDropList
+             [cdkDropListData]="inProgressTasks"
+             [cdkDropListConnectedTo]="['todo-list', 'review-list', 'completed-list', 'blocked-list', 'deferred-list']"
+             (cdkDropListDropped)="drop($event)">
+          <div class="task-card" 
+               *ngFor="let task of inProgressTasks" 
+               cdkDrag
+               (click)="viewTask(task)">
+            <div class="task-card-content">
+              <div class="task-title" [class.overdue]="isTaskOverdue(task)">
+                <mat-icon *ngIf="isTaskOverdue(task)" class="overdue-icon" matTooltip="{{ 'TASKS.OVERDUE' | translate }}">warning</mat-icon>
+                {{ task.title }}
+              </div>
+              <div class="task-meta">
+                <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                  {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+                </span>
+                <span class="due-date" *ngIf="task.dueDate" [class.overdue]="isTaskOverdue(task)">
+                  {{ task.dueDate | date:'shortDate' }}
+                </span>
+              </div>
+              <div class="task-assignee" *ngIf="task.assignedToName">
+                <mat-icon>person</mat-icon>
+                {{ task.assignedToName }}
+              </div>
+            </div>
+          </div>
+          <div class="empty-column" *ngIf="inProgressTasks.length === 0">
+            {{ 'TASKS.NO_TASKS' | translate }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Review Column -->
+      <div class="board-column">
+        <div class="column-header review-header">
+          <h3 class="column-title">{{ 'TASKS.STATUS.REVIEW' | translate }}</h3>
+          <div class="task-count">{{ reviewTasks.length }}</div>
+        </div>
+        <div class="column-content" 
+             id="review-list"
+             cdkDropList
+             [cdkDropListData]="reviewTasks"
+             [cdkDropListConnectedTo]="['todo-list', 'in-progress-list', 'completed-list', 'blocked-list', 'deferred-list']"
+             (cdkDropListDropped)="drop($event)">
+          <div class="task-card" 
+               *ngFor="let task of reviewTasks" 
+               cdkDrag
+               (click)="viewTask(task)">
+            <div class="task-card-content">
+              <div class="task-title" [class.overdue]="isTaskOverdue(task)">
+                <mat-icon *ngIf="isTaskOverdue(task)" class="overdue-icon" matTooltip="{{ 'TASKS.OVERDUE' | translate }}">warning</mat-icon>
+                {{ task.title }}
+              </div>
+              <div class="task-meta">
+                <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                  {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+                </span>
+                <span class="due-date" *ngIf="task.dueDate" [class.overdue]="isTaskOverdue(task)">
+                  {{ task.dueDate | date:'shortDate' }}
+                </span>
+              </div>
+              <div class="task-assignee" *ngIf="task.assignedToName">
+                <mat-icon>person</mat-icon>
+                {{ task.assignedToName }}
+              </div>
+            </div>
+          </div>
+          <div class="empty-column" *ngIf="reviewTasks.length === 0">
+            {{ 'TASKS.NO_TASKS' | translate }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Column -->
+      <div class="board-column">
+        <div class="column-header completed-header">
+          <h3 class="column-title">{{ 'TASKS.STATUS.COMPLETED' | translate }}</h3>
+          <div class="task-count">{{ completedTasks.length }}</div>
+        </div>
+        <div class="column-content" 
+             id="completed-list"
+             cdkDropList
+             [cdkDropListData]="completedTasks"
+             [cdkDropListConnectedTo]="['todo-list', 'in-progress-list', 'review-list', 'blocked-list', 'deferred-list']"
+             (cdkDropListDropped)="drop($event)">
+          <div class="task-card" 
+               *ngFor="let task of completedTasks" 
+               cdkDrag
+               (click)="viewTask(task)">
+            <div class="task-card-content">
+              <div class="task-title">
+                {{ task.title }}
+              </div>
+              <div class="task-meta">
+                <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                  {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+                </span>
+                <span class="completion-date" *ngIf="task.completedDate">
+                  {{ task.completedDate | date:'shortDate' }}
+                </span>
+              </div>
+              <div class="task-assignee" *ngIf="task.assignedToName">
+                <mat-icon>person</mat-icon>
+                {{ task.assignedToName }}
+              </div>
+            </div>
+          </div>
+          <div class="empty-column" *ngIf="completedTasks.length === 0">
+            {{ 'TASKS.NO_TASKS' | translate }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Blocked Column -->
+      <div class="board-column">
+        <div class="column-header blocked-header">
+          <h3 class="column-title">{{ 'TASKS.STATUS.BLOCKED' | translate }}</h3>
+          <div class="task-count">{{ blockedTasks.length }}</div>
+        </div>
+        <div class="column-content" 
+             id="blocked-list"
+             cdkDropList
+             [cdkDropListData]="blockedTasks"
+             [cdkDropListConnectedTo]="['todo-list', 'in-progress-list', 'review-list', 'completed-list', 'deferred-list']"
+             (cdkDropListDropped)="drop($event)">
+          <div class="task-card" 
+               *ngFor="let task of blockedTasks" 
+               cdkDrag
+               (click)="viewTask(task)">
+            <div class="task-card-content">
+              <div class="task-title" [class.overdue]="isTaskOverdue(task)">
+                <mat-icon *ngIf="isTaskOverdue(task)" class="overdue-icon" matTooltip="{{ 'TASKS.OVERDUE' | translate }}">warning</mat-icon>
+                {{ task.title }}
+              </div>
+              <div class="task-meta">
+                <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                  {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+                </span>
+                <span class="due-date" *ngIf="task.dueDate" [class.overdue]="isTaskOverdue(task)">
+                  {{ task.dueDate | date:'shortDate' }}
+                </span>
+              </div>
+              <div class="task-assignee" *ngIf="task.assignedToName">
+                <mat-icon>person</mat-icon>
+                {{ task.assignedToName }}
+              </div>
+            </div>
+          </div>
+          <div class="empty-column" *ngIf="blockedTasks.length === 0">
+            {{ 'TASKS.NO_TASKS' | translate }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Deferred Column -->
+      <div class="board-column">
+        <div class="column-header deferred-header">
+          <h3 class="column-title">{{ 'TASKS.STATUS.DEFERRED' | translate }}</h3>
+          <div class="task-count">{{ deferredTasks.length }}</div>
+        </div>
+        <div class="column-content" 
+             id="deferred-list"
+             cdkDropList
+             [cdkDropListData]="deferredTasks"
+             [cdkDropListConnectedTo]="['todo-list', 'in-progress-list', 'review-list', 'completed-list', 'blocked-list']"
+             (cdkDropListDropped)="drop($event)">
+          <div class="task-card" 
+               *ngFor="let task of deferredTasks" 
+               cdkDrag
+               (click)="viewTask(task)">
+            <div class="task-card-content">
+              <div class="task-title" [class.overdue]="isTaskOverdue(task)">
+                <mat-icon *ngIf="isTaskOverdue(task)" class="overdue-icon" matTooltip="{{ 'TASKS.OVERDUE' | translate }}">warning</mat-icon>
+                {{ task.title }}
+              </div>
+              <div class="task-meta">
+                <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                  {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+                </span>
+                <span class="due-date" *ngIf="task.dueDate" [class.overdue]="isTaskOverdue(task)">
+                  {{ task.dueDate | date:'shortDate' }}
+                </span>
+              </div>
+              <div class="task-assignee" *ngIf="task.assignedToName">
+                <mat-icon>person</mat-icon>
+                {{ task.assignedToName }}
+              </div>
+            </div>
+          </div>
+          <div class="empty-column" *ngIf="deferredTasks.length === 0">
+            {{ 'TASKS.NO_TASKS' | translate }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

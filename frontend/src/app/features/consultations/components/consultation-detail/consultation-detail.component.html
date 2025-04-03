@@ -1,0 +1,383 @@
+<div class="consultation-detail-container">
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" matTooltip="{{ 'COMMON.BACK' | translate }}">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ 'CONSULTATIONS.CONSULTATION_DETAILS' | translate }}</h1>
+    
+    <div class="header-actions" *ngIf="consultation">
+      <button mat-raised-button color="primary" [matMenuTriggerFor]="actionsMenu">
+        {{ 'COMMON.ACTIONS' | translate }}
+        <mat-icon>arrow_drop_down</mat-icon>
+      </button>
+      
+      <mat-menu #actionsMenu="matMenu">
+        <button mat-menu-item (click)="startConsultation()" 
+                *ngIf="consultation.status === 'scheduled'">
+          <mat-icon>play_arrow</mat-icon>
+          {{ 'CONSULTATIONS.START' | translate }}
+        </button>
+        <button mat-menu-item (click)="completeConsultation()" 
+                *ngIf="consultation.status === 'in_progress'">
+          <mat-icon>check_circle</mat-icon>
+          {{ 'CONSULTATIONS.COMPLETE' | translate }}
+        </button>
+        <button mat-menu-item (click)="rescheduleConsultation()" 
+                *ngIf="consultation.status !== 'completed' && consultation.status !== 'cancelled'">
+          <mat-icon>event</mat-icon>
+          {{ 'CONSULTATIONS.RESCHEDULE' | translate }}
+        </button>
+        <button mat-menu-item (click)="cancelConsultation()" 
+                *ngIf="consultation.status !== 'completed' && consultation.status !== 'cancelled'">
+          <mat-icon>cancel</mat-icon>
+          {{ 'CONSULTATIONS.CANCEL' | translate }}
+        </button>
+        <button mat-menu-item (click)="goToFeedback()" 
+                *ngIf="consultation.status === 'completed'">
+          <mat-icon>feedback</mat-icon>
+          {{ 'CONSULTATIONS.ADD_FEEDBACK' | translate }}
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="deleteConsultation()" class="delete-action">
+          <mat-icon>delete</mat-icon>
+          {{ 'COMMON.DELETE' | translate }}
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="loadConsultation()">
+      {{ 'COMMON.TRY_AGAIN' | translate }}
+    </button>
+  </div>
+
+  <div class="consultation-content" *ngIf="!isLoading && !error && consultation">
+    <div class="consultation-header">
+      <div class="status-section">
+        <span class="status-badge" [ngClass]="getStatusClass(consultation.status)">
+          {{ 'CONSULTATIONS.STATUS.' + consultation.status.toUpperCase() | translate }}
+        </span>
+      </div>
+      
+      <h2 class="consultation-title">{{ consultation.title }}</h2>
+      
+      <div class="consultation-meta">
+        <div class="meta-item">
+          <mat-icon>person</mat-icon>
+          <span>{{ 'CONSULTATIONS.CLIENT' | translate }}: {{ consultation.clientName }}</span>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>person_outline</mat-icon>
+          <span>{{ 'CONSULTATIONS.ATTORNEY' | translate }}: 
+            <span *ngIf="consultation.attorneyName">{{ consultation.attorneyName }}</span>
+            <span class="unassigned" *ngIf="!consultation.attorneyName">{{ 'CONSULTATIONS.UNASSIGNED' | translate }}</span>
+          </span>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>event</mat-icon>
+          <span>{{ 'CONSULTATIONS.SCHEDULED_DATE' | translate }}: {{ consultation.scheduledDate | date:'medium' }}</span>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>schedule</mat-icon>
+          <span>{{ 'CONSULTATIONS.DURATION' | translate }}: {{ consultation.duration }} {{ 'CONSULTATIONS.MINUTES' | translate }}</span>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>category</mat-icon>
+          <span>{{ 'CONSULTATIONS.TYPE' | translate }}: {{ 'CONSULTATIONS.TYPE.' + consultation.type.toUpperCase() | translate }}</span>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>priority_high</mat-icon>
+          <span>{{ 'CONSULTATIONS.PRIORITY' | translate }}: {{ 'CONSULTATIONS.PRIORITY.' + consultation.priority.toUpperCase() | translate }}</span>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>devices</mat-icon>
+          <span>{{ 'CONSULTATIONS.MODE' | translate }}: {{ 'CONSULTATIONS.MODE.' + consultation.mode.toUpperCase() | translate }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <mat-tab-group animationDuration="0ms" class="consultation-tabs">
+      <mat-tab label="{{ 'CONSULTATIONS.DETAILS' | translate }}">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-content>
+              <div class="detail-section">
+                <h3 class="section-title">{{ 'CONSULTATIONS.DESCRIPTION' | translate }}</h3>
+                <p class="description">{{ consultation.description || ('CONSULTATIONS.NO_DESCRIPTION' | translate) }}</p>
+              </div>
+              
+              <div class="detail-section" *ngIf="consultation.mode === 'in_person' && consultation.location">
+                <h3 class="section-title">{{ 'CONSULTATIONS.LOCATION' | translate }}</h3>
+                <p>{{ consultation.location }}</p>
+              </div>
+              
+              <div class="detail-section" *ngIf="consultation.mode === 'video' && consultation.meetingLink">
+                <h3 class="section-title">{{ 'CONSULTATIONS.MEETING_LINK' | translate }}</h3>
+                <p><a [href]="consultation.meetingLink" target="_blank">{{ consultation.meetingLink }}</a></p>
+              </div>
+              
+              <div class="detail-section" *ngIf="consultation.mode === 'phone' && consultation.phoneNumber">
+                <h3 class="section-title">{{ 'CONSULTATIONS.PHONE_NUMBER' | translate }}</h3>
+                <p>{{ consultation.phoneNumber }}</p>
+              </div>
+              
+              <div class="detail-section" *ngIf="consultation.fee !== undefined">
+                <h3 class="section-title">{{ 'CONSULTATIONS.BILLING_INFO' | translate }}</h3>
+                <p>{{ 'CONSULTATIONS.FEE' | translate }}: {{ consultation.fee }} {{ consultation.currency }}</p>
+                <p>{{ 'CONSULTATIONS.PAYMENT_STATUS' | translate }}: 
+                  <span *ngIf="consultation.isPaid">{{ 'CONSULTATIONS.PAID' | translate }}</span>
+                  <span *ngIf="!consultation.isPaid">{{ 'CONSULTATIONS.UNPAID' | translate }}</span>
+                </p>
+                <p *ngIf="consultation.paymentDate">{{ 'CONSULTATIONS.PAYMENT_DATE' | translate }}: {{ consultation.paymentDate | date }}</p>
+                <p *ngIf="consultation.paymentMethod">{{ 'CONSULTATIONS.PAYMENT_METHOD' | translate }}: {{ consultation.paymentMethod }}</p>
+                <p *ngIf="consultation.paymentReference">{{ 'CONSULTATIONS.PAYMENT_REFERENCE' | translate }}: {{ consultation.paymentReference }}</p>
+              </div>
+              
+              <div class="detail-section" *ngIf="consultation.tags && consultation.tags.length > 0">
+                <h3 class="section-title">{{ 'CONSULTATIONS.TAGS' | translate }}</h3>
+                <div class="tags-container">
+                  <span class="tag" *ngFor="let tag of consultation.tags">{{ tag }}</span>
+                </div>
+              </div>
+              
+              <div class="detail-section" *ngIf="consultation.summary">
+                <h3 class="section-title">{{ 'CONSULTATIONS.SUMMARY' | translate }}</h3>
+                <p>{{ consultation.summary }}</p>
+              </div>
+              
+              <div class="detail-section" *ngIf="consultation.followUpRequired">
+                <h3 class="section-title">{{ 'CONSULTATIONS.FOLLOW_UP' | translate }}</h3>
+                <p>{{ 'CONSULTATIONS.FOLLOW_UP_REQUIRED' | translate }}</p>
+                <p *ngIf="consultation.followUpDate">{{ 'CONSULTATIONS.FOLLOW_UP_DATE' | translate }}: {{ consultation.followUpDate | date }}</p>
+              </div>
+              
+              <div class="detail-section">
+                <h3 class="section-title">{{ 'CONSULTATIONS.RELATED_ITEMS' | translate }}</h3>
+                <div *ngIf="consultation.relatedCaseName">
+                  <p>{{ 'CONSULTATIONS.RELATED_CASE' | translate }}: {{ consultation.relatedCaseName }}</p>
+                </div>
+                <div *ngIf="consultation.relatedDocuments && consultation.relatedDocuments.length > 0">
+                  <p>{{ 'CONSULTATIONS.RELATED_DOCUMENTS' | translate }}:</p>
+                  <ul>
+                    <li *ngFor="let doc of consultation.relatedDocuments">{{ doc.title }}</li>
+                  </ul>
+                </div>
+                <div *ngIf="consultation.relatedTasks && consultation.relatedTasks.length > 0">
+                  <p>{{ 'CONSULTATIONS.RELATED_TASKS' | translate }}:</p>
+                  <ul>
+                    <li *ngFor="let task of consultation.relatedTasks">{{ task.title }}</li>
+                  </ul>
+                </div>
+                <div *ngIf="!consultation.relatedCaseName && (!consultation.relatedDocuments || consultation.relatedDocuments.length === 0) && (!consultation.relatedTasks || consultation.relatedTasks.length === 0)">
+                  <p>{{ 'CONSULTATIONS.NO_RELATED_ITEMS' | translate }}</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+      
+      <mat-tab label="{{ 'CONSULTATIONS.NOTES' | translate }}">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-content>
+              <div class="add-note-section">
+                <h3 class="section-title">{{ 'CONSULTATIONS.ADD_NOTE' | translate }}</h3>
+                <form [formGroup]="noteForm" (ngSubmit)="addNote()">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>{{ 'CONSULTATIONS.NOTE_CONTENT' | translate }}</mat-label>
+                    <textarea matInput formControlName="content" rows="4" required></textarea>
+                    <mat-error *ngIf="noteForm.get('content')?.hasError('required')">
+                      {{ 'CONSULTATIONS.NOTE_CONTENT_REQUIRED' | translate }}
+                    </mat-error>
+                    <mat-error *ngIf="noteForm.get('content')?.hasError('maxlength')">
+                      {{ 'CONSULTATIONS.NOTE_CONTENT_TOO_LONG' | translate }}
+                    </mat-error>
+                  </mat-form-field>
+                  
+                  <div class="note-options">
+                    <mat-checkbox formControlName="isPrivate">
+                      {{ 'CONSULTATIONS.PRIVATE_NOTE' | translate }}
+                    </mat-checkbox>
+                    
+                    <button type="submit" mat-raised-button color="primary" [disabled]="noteForm.invalid || isSubmittingNote">
+                      {{ 'CONSULTATIONS.ADD_NOTE' | translate }}
+                    </button>
+                  </div>
+                  
+                  <div class="loading-container" *ngIf="isSubmittingNote">
+                    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                  </div>
+                </form>
+              </div>
+              
+              <div class="notes-list-section">
+                <h3 class="section-title">{{ 'CONSULTATIONS.NOTES' | translate }}</h3>
+                
+                <div class="loading-container" *ngIf="isNotesLoading">
+                  <mat-progress-spinner mode="indeterminate" diameter="30"></mat-progress-spinner>
+                  <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+                </div>
+                
+                <div class="notes-list" *ngIf="!isNotesLoading">
+                  <div *ngIf="notes.length === 0" class="empty-list">
+                    {{ 'CONSULTATIONS.NO_NOTES' | translate }}
+                  </div>
+                  
+                  <mat-card class="note-card" *ngFor="let note of notes">
+                    <mat-card-content>
+                      <div class="note-header">
+                        <div class="note-author">
+                          <mat-icon>person</mat-icon>
+                          <span>{{ note.createdByName || note.createdBy }}</span>
+                        </div>
+                        <div class="note-date">
+                          {{ note.createdDate | date:'medium' }}
+                        </div>
+                        <div class="note-privacy" *ngIf="note.isPrivate">
+                          <mat-icon matTooltip="{{ 'CONSULTATIONS.PRIVATE_NOTE_TOOLTIP' | translate }}">lock</mat-icon>
+                        </div>
+                      </div>
+                      <div class="note-content">
+                        {{ note.content }}
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+      
+      <mat-tab label="{{ 'CONSULTATIONS.ATTACHMENTS' | translate }}">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-content>
+              <div class="add-attachment-section">
+                <h3 class="section-title">{{ 'CONSULTATIONS.ADD_ATTACHMENT' | translate }}</h3>
+                <div class="upload-button">
+                  <button mat-raised-button color="primary" (click)="fileInput.click()">
+                    <mat-icon>attach_file</mat-icon>
+                    {{ 'CONSULTATIONS.UPLOAD_FILE' | translate }}
+                  </button>
+                  <input #fileInput type="file" style="display: none" (change)="uploadAttachment($event)">
+                </div>
+              </div>
+              
+              <div class="attachments-list-section">
+                <h3 class="section-title">{{ 'CONSULTATIONS.ATTACHMENTS' | translate }}</h3>
+                
+                <div class="loading-container" *ngIf="isAttachmentsLoading">
+                  <mat-progress-spinner mode="indeterminate" diameter="30"></mat-progress-spinner>
+                  <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+                </div>
+                
+                <div class="attachments-list" *ngIf="!isAttachmentsLoading">
+                  <div *ngIf="attachments.length === 0" class="empty-list">
+                    {{ 'CONSULTATIONS.NO_ATTACHMENTS' | translate }}
+                  </div>
+                  
+                  <mat-card class="attachment-card" *ngFor="let attachment of attachments">
+                    <mat-card-content>
+                      <div class="attachment-header">
+                        <div class="attachment-icon">
+                          <mat-icon>insert_drive_file</mat-icon>
+                        </div>
+                        <div class="attachment-info">
+                          <div class="attachment-name">{{ attachment.fileName }}</div>
+                          <div class="attachment-meta">
+                            <span>{{ attachment.fileSize | number }} bytes</span>
+                            <span>{{ attachment.fileType }}</span>
+                            <span *ngIf="attachment.isPrivate" class="private-label">
+                              <mat-icon matTooltip="{{ 'CONSULTATIONS.PRIVATE_ATTACHMENT_TOOLTIP' | translate }}">lock</mat-icon>
+                            </span>
+                          </div>
+                          <div class="attachment-description" *ngIf="attachment.description">
+                            {{ attachment.description }}
+                          </div>
+                          <div class="attachment-upload-info">
+                            {{ 'CONSULTATIONS.UPLOADED_BY' | translate }}: {{ attachment.uploadedByName || attachment.uploadedBy }}
+                            {{ 'CONSULTATIONS.ON' | translate }} {{ attachment.uploadDate | date }}
+                          </div>
+                        </div>
+                        <div class="attachment-actions">
+                          <button mat-icon-button color="primary" (click)="downloadAttachment(attachment)" matTooltip="{{ 'COMMON.DOWNLOAD' | translate }}">
+                            <mat-icon>download</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+      
+      <mat-tab label="{{ 'CONSULTATIONS.FEEDBACK' | translate }}">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-content>
+              <div class="feedback-section">
+                <h3 class="section-title">{{ 'CONSULTATIONS.FEEDBACK' | translate }}</h3>
+                
+                <div class="loading-container" *ngIf="isFeedbackLoading">
+                  <mat-progress-spinner mode="indeterminate" diameter="30"></mat-progress-spinner>
+                  <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+                </div>
+                
+                <div class="feedback-content" *ngIf="!isFeedbackLoading">
+                  <div *ngIf="feedback.length === 0" class="empty-list">
+                    <p>{{ 'CONSULTATIONS.NO_FEEDBACK' | translate }}</p>
+                    <button mat-raised-button color="primary" (click)="goToFeedback()" *ngIf="consultation?.status === 'completed'">
+                      {{ 'CONSULTATIONS.ADD_FEEDBACK' | translate }}
+                    </button>
+                  </div>
+                  
+                  <div *ngFor="let item of feedback" class="feedback-item">
+                    <div class="feedback-header">
+                      <div class="feedback-author">
+                        <mat-icon>person</mat-icon>
+                        <span>{{ item.submittedByName || item.submittedBy }}</span>
+                      </div>
+                      <div class="feedback-date">
+                        {{ item.submittedDate | date }}
+                      </div>
+                    </div>
+                    
+                    <div class="feedback-rating">
+                      <span class="rating-label">{{ 'CONSULTATIONS.RATING' | translate }}:</span>
+                      <span class="rating-stars">
+                        <mat-icon *ngFor="let star of [1, 2, 3, 4, 5]" 
+                                 [class.filled]="star <= item.rating">star</mat-icon>
+                      </span>
+                    </div>
+                    
+                    <div class="feedback-comments" *ngIf="item.comments">
+                      <p>{{ item.comments }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

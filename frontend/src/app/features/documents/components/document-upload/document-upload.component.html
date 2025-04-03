@@ -1,0 +1,116 @@
+<div class="document-upload-container">
+  <div class="header-section">
+    <h1 class="page-title">{{ 'DOCUMENTS.UPLOAD_TITLE' | translate }}</h1>
+    <button mat-icon-button (click)="cancelUpload()" matTooltip="{{ 'COMMON.CANCEL' | translate }}">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-card class="upload-card">
+    <mat-card-content>
+      <form [formGroup]="uploadForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <div class="file-upload-container">
+            <div class="file-drop-area" 
+                 [class.has-file]="selectedFile" 
+                 [class.is-image]="isImageFile"
+                 [class.is-pdf]="isPdfFile">
+              <input type="file" id="file-upload" (change)="onFileSelected($event)" hidden>
+              
+              <div class="file-preview" *ngIf="!selectedFile">
+                <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                <p class="upload-text">{{ 'DOCUMENTS.DROP_FILES' | translate }}</p>
+                <p class="upload-hint">{{ 'DOCUMENTS.OR_CLICK' | translate }}</p>
+                <button type="button" mat-raised-button color="primary" (click)="document.getElementById('file-upload').click()">
+                  {{ 'DOCUMENTS.SELECT_FILE' | translate }}
+                </button>
+              </div>
+              
+              <div class="file-preview" *ngIf="selectedFile && isImageFile && filePreview">
+                <img [src]="filePreview" alt="File preview" class="image-preview">
+                <div class="file-info">
+                  <p class="file-name">{{ selectedFile.name }}</p>
+                  <p class="file-size">{{ selectedFile.size | number }} bytes</p>
+                </div>
+                <button type="button" mat-icon-button color="warn" (click)="selectedFile = null; filePreview = null; uploadForm.get('file')?.reset()">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              
+              <div class="file-preview" *ngIf="selectedFile && !isImageFile">
+                <mat-icon class="file-icon" 
+                          [ngClass]="'file-icon-' + (selectedFile.type.split('/')[1] || 'generic')">
+                  insert_drive_file
+                </mat-icon>
+                <div class="file-info">
+                  <p class="file-name">{{ selectedFile.name }}</p>
+                  <p class="file-size">{{ selectedFile.size | number }} bytes</p>
+                  <p class="file-type">{{ selectedFile.type || 'Unknown type' }}</p>
+                </div>
+                <button type="button" mat-icon-button color="warn" (click)="selectedFile = null; filePreview = null; uploadForm.get('file')?.reset()">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+            
+            <mat-error *ngIf="uploadForm.get('file')?.hasError('required') && uploadForm.get('file')?.touched">
+              {{ 'DOCUMENTS.FILE_REQUIRED' | translate }}
+            </mat-error>
+          </div>
+          
+          <div class="form-fields">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'DOCUMENTS.TITLE_FIELD' | translate }}</mat-label>
+              <input matInput formControlName="title" required>
+              <mat-error *ngIf="uploadForm.get('title')?.hasError('required')">
+                {{ 'DOCUMENTS.TITLE_REQUIRED' | translate }}
+              </mat-error>
+              <mat-error *ngIf="uploadForm.get('title')?.hasError('maxlength')">
+                {{ 'DOCUMENTS.TITLE_TOO_LONG' | translate }}
+              </mat-error>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'DOCUMENTS.DESCRIPTION_FIELD' | translate }}</mat-label>
+              <textarea matInput formControlName="description" rows="3"></textarea>
+              <mat-error *ngIf="uploadForm.get('description')?.hasError('maxlength')">
+                {{ 'DOCUMENTS.DESCRIPTION_TOO_LONG' | translate }}
+              </mat-error>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'DOCUMENTS.CATEGORY_FIELD' | translate }}</mat-label>
+              <mat-select formControlName="categoryId">
+                <mat-option [value]="">{{ 'DOCUMENTS.NO_CATEGORY' | translate }}</mat-option>
+                <mat-option *ngFor="let category of categories" [value]="category.id">
+                  {{ category.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'DOCUMENTS.TAGS_FIELD' | translate }}</mat-label>
+              <input matInput formControlName="tags" placeholder="{{ 'DOCUMENTS.TAGS_PLACEHOLDER' | translate }}">
+              <mat-hint>{{ 'DOCUMENTS.TAGS_HINT' | translate }}</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+        
+        <div class="upload-progress" *ngIf="isUploading">
+          <mat-progress-bar mode="determinate" [value]="uploadProgress"></mat-progress-bar>
+          <p class="progress-text">{{ 'DOCUMENTS.UPLOADING' | translate }} ({{ uploadProgress }}%)</p>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" mat-button (click)="cancelUpload()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+          <button type="submit" mat-raised-button color="primary" [disabled]="uploadForm.invalid || isUploading">
+            <mat-icon>cloud_upload</mat-icon>
+            {{ 'DOCUMENTS.UPLOAD_BUTTON' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

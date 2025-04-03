@@ -1,0 +1,261 @@
+<div class="task-detail-container">
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" matTooltip="{{ 'COMMON.BACK' | translate }}">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ 'TASKS.TASK_DETAILS' | translate }}</h1>
+    <div class="header-actions">
+      <button mat-icon-button [matMenuTriggerFor]="actionsMenu" aria-label="Task actions">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #actionsMenu="matMenu">
+        <button mat-menu-item (click)="assignTask()">
+          <mat-icon>person_add</mat-icon>
+          <span>{{ 'TASKS.ASSIGN' | translate }}</span>
+        </button>
+        <button mat-menu-item (click)="deleteTask()">
+          <mat-icon>delete</mat-icon>
+          <span>{{ 'COMMON.DELETE' | translate }}</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="loadTask()">
+      {{ 'COMMON.TRY_AGAIN' | translate }}
+    </button>
+  </div>
+
+  <div class="task-content" *ngIf="!isLoading && !error && task">
+    <div class="task-header">
+      <div class="task-title-section">
+        <h2 class="task-title" [class.overdue]="isTaskOverdue()">
+          <mat-icon *ngIf="isTaskOverdue()" class="overdue-icon" matTooltip="{{ 'TASKS.OVERDUE' | translate }}">warning</mat-icon>
+          {{ task.title }}
+        </h2>
+        <div class="task-meta">
+          <span class="task-id">{{ 'TASKS.ID' | translate }}: {{ task.id }}</span>
+          <span class="task-created">{{ 'TASKS.CREATED_ON' | translate }}: {{ task.createdDate | date:'medium' }}</span>
+          <span class="task-creator">{{ 'TASKS.CREATED_BY' | translate }}: {{ task.createdByName || 'Unknown' }}</span>
+        </div>
+      </div>
+      <div class="task-status-section">
+        <div class="status-row">
+          <span class="status-label">{{ 'TASKS.STATUS' | translate }}:</span>
+          <button mat-button [matMenuTriggerFor]="statusMenu" class="status-button">
+            <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+              {{ 'TASKS.STATUS.' + task.status.toUpperCase() | translate }}
+            </span>
+            <mat-icon>arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #statusMenu="matMenu">
+            <button mat-menu-item *ngFor="let status of taskStatuses" 
+                    (click)="updateTaskStatus(status.value)" 
+                    [disabled]="task.status === status.value">
+              <span class="status-badge" [ngClass]="getStatusClass(status.value)">
+                {{ status.label | translate }}
+              </span>
+            </button>
+          </mat-menu>
+        </div>
+        <div class="priority-row">
+          <span class="priority-label">{{ 'TASKS.PRIORITY' | translate }}:</span>
+          <button mat-button [matMenuTriggerFor]="priorityMenu" class="priority-button">
+            <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+              {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+            </span>
+            <mat-icon>arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #priorityMenu="matMenu">
+            <button mat-menu-item *ngFor="let priority of taskPriorities" 
+                    (click)="updateTaskPriority(priority.value)" 
+                    [disabled]="task.priority === priority.value">
+              <span class="priority-badge" [ngClass]="getPriorityClass(priority.value)">
+                {{ priority.label | translate }}
+              </span>
+            </button>
+          </mat-menu>
+        </div>
+      </div>
+    </div>
+
+    <mat-card class="task-details-card">
+      <mat-card-content>
+        <div class="task-info-grid">
+          <div class="task-info-item">
+            <span class="info-label">{{ 'TASKS.ASSIGNED_TO' | translate }}</span>
+            <div class="info-value">
+              <span *ngIf="task.assignedToName">{{ task.assignedToName }}</span>
+              <span class="unassigned" *ngIf="!task.assignedToName">{{ 'TASKS.UNASSIGNED' | translate }}</span>
+              <button mat-icon-button (click)="assignTask()" matTooltip="{{ 'TASKS.ASSIGN' | translate }}">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="task-info-item">
+            <span class="info-label">{{ 'TASKS.DUE_DATE' | translate }}</span>
+            <div class="info-value" [class.overdue]="isTaskOverdue()">
+              {{ task.dueDate ? (task.dueDate | date:'mediumDate') : ('TASKS.NO_DUE_DATE' | translate) }}
+            </div>
+          </div>
+
+          <div class="task-info-item">
+            <span class="info-label">{{ 'TASKS.START_DATE' | translate }}</span>
+            <div class="info-value">
+              {{ task.startDate ? (task.startDate | date:'mediumDate') : ('TASKS.NOT_STARTED' | translate) }}
+            </div>
+          </div>
+
+          <div class="task-info-item">
+            <span class="info-label">{{ 'TASKS.CATEGORY' | translate }}</span>
+            <div class="info-value">
+              <span *ngIf="task.categoryName">{{ task.categoryName }}</span>
+              <span class="no-category" *ngIf="!task.categoryName">{{ 'TASKS.NO_CATEGORY' | translate }}</span>
+            </div>
+          </div>
+
+          <div class="task-info-item">
+            <span class="info-label">{{ 'TASKS.ESTIMATED_HOURS' | translate }}</span>
+            <div class="info-value">
+              {{ task.estimatedHours ? task.estimatedHours : ('TASKS.NO_ESTIMATE' | translate) }}
+            </div>
+          </div>
+
+          <div class="task-info-item">
+            <span class="info-label">{{ 'TASKS.ACTUAL_HOURS' | translate }}</span>
+            <div class="info-value">
+              {{ task.actualHours ? task.actualHours : ('TASKS.NO_ACTUAL_HOURS' | translate) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="task-description-section">
+          <h3 class="section-title">{{ 'TASKS.DESCRIPTION' | translate }}</h3>
+          <div class="task-description">
+            <p *ngIf="task.description">{{ task.description }}</p>
+            <p *ngIf="!task.description" class="no-description">{{ 'TASKS.NO_DESCRIPTION' | translate }}</p>
+          </div>
+        </div>
+
+        <div class="task-tags-section" *ngIf="task.tags && task.tags.length > 0">
+          <h3 class="section-title">{{ 'TASKS.TAGS' | translate }}</h3>
+          <div class="task-tags">
+            <mat-chip-list>
+              <mat-chip *ngFor="let tag of task.tags">{{ tag }}</mat-chip>
+            </mat-chip-list>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-tab-group class="task-tabs">
+      <mat-tab label="{{ 'TASKS.COMMENTS' | translate }}">
+        <div class="tab-content">
+          <div class="comments-section">
+            <div class="add-comment-form">
+              <form [formGroup]="commentForm" (ngSubmit)="addComment()">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>{{ 'TASKS.ADD_COMMENT' | translate }}</mat-label>
+                  <textarea matInput formControlName="content" rows="3"></textarea>
+                  <mat-error *ngIf="commentForm.get('content')?.hasError('required')">
+                    {{ 'TASKS.COMMENT_REQUIRED' | translate }}
+                  </mat-error>
+                  <mat-error *ngIf="commentForm.get('content')?.hasError('maxlength')">
+                    {{ 'TASKS.COMMENT_TOO_LONG' | translate }}
+                  </mat-error>
+                </mat-form-field>
+                <div class="form-actions">
+                  <button type="submit" mat-raised-button color="primary" [disabled]="commentForm.invalid || isSubmittingComment">
+                    {{ 'TASKS.POST_COMMENT' | translate }}
+                  </button>
+                </div>
+              </form>
+              <div class="loading-container" *ngIf="isSubmittingComment">
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+              </div>
+            </div>
+
+            <div class="comments-list">
+              <div class="loading-container" *ngIf="isCommentsLoading">
+                <mat-progress-spinner mode="indeterminate" diameter="30"></mat-progress-spinner>
+              </div>
+
+              <div class="no-comments" *ngIf="!isCommentsLoading && comments.length === 0">
+                <p>{{ 'TASKS.NO_COMMENTS' | translate }}</p>
+              </div>
+
+              <div class="comment-item" *ngFor="let comment of comments">
+                <div class="comment-header">
+                  <span class="comment-author">{{ comment.createdByName || 'Unknown' }}</span>
+                  <span class="comment-date">{{ comment.createdDate | date:'medium' }}</span>
+                </div>
+                <div class="comment-content">
+                  <p>{{ comment.content }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="{{ 'TASKS.ATTACHMENTS' | translate }}">
+        <div class="tab-content">
+          <div class="attachments-section">
+            <div class="loading-container" *ngIf="isAttachmentsLoading">
+              <mat-progress-spinner mode="indeterminate" diameter="30"></mat-progress-spinner>
+            </div>
+
+            <div class="no-attachments" *ngIf="!isAttachmentsLoading && attachments.length === 0">
+              <p>{{ 'TASKS.NO_ATTACHMENTS' | translate }}</p>
+            </div>
+
+            <div class="attachments-list" *ngIf="!isAttachmentsLoading && attachments.length > 0">
+              <mat-list>
+                <mat-list-item *ngFor="let attachment of attachments" class="attachment-item">
+                  <mat-icon mat-list-icon [ngClass]="'file-icon-' + attachment.fileType.split('/')[1]">insert_drive_file</mat-icon>
+                  <div mat-line>{{ attachment.fileName }}</div>
+                  <div mat-line class="attachment-info">
+                    {{ attachment.fileSize | number }} bytes | {{ attachment.uploadDate | date:'medium' }}
+                  </div>
+                  <button mat-icon-button (click)="downloadAttachment(attachment)" matTooltip="{{ 'COMMON.DOWNLOAD' | translate }}">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </mat-list-item>
+              </mat-list>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="{{ 'TASKS.RELATED_DOCUMENTS' | translate }}">
+        <div class="tab-content">
+          <div class="related-documents-section">
+            <div class="no-related-documents" *ngIf="!task.relatedDocuments || task.relatedDocuments.length === 0">
+              <p>{{ 'TASKS.NO_RELATED_DOCUMENTS' | translate }}</p>
+            </div>
+
+            <div class="related-documents-list" *ngIf="task.relatedDocuments && task.relatedDocuments.length > 0">
+              <mat-list>
+                <mat-list-item *ngFor="let document of task.relatedDocuments" class="document-item">
+                  <mat-icon mat-list-icon>description</mat-icon>
+                  <div mat-line>{{ document.title }}</div>
+                  <button mat-icon-button [routerLink]="['/documents', document.id]" matTooltip="{{ 'COMMON.VIEW' | translate }}">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </mat-list-item>
+              </mat-list>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

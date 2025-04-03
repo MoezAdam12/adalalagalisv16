@@ -1,0 +1,229 @@
+<div class="time-entry-form-container">
+  <div class="card">
+    <div class="card-header">
+      <h3>تسجيل الوقت</h3>
+    </div>
+    <div class="card-body">
+      <div *ngIf="isLoading" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">جاري التحميل...</span>
+        </div>
+      </div>
+      
+      <form [formGroup]="timeEntryForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="activity_date">تاريخ النشاط</label>
+              <input 
+                type="date" 
+                id="activity_date" 
+                class="form-control" 
+                formControlName="activity_date"
+                [ngClass]="{'is-invalid': timeEntryForm.get('activity_date').invalid && timeEntryForm.get('activity_date').touched}"
+              >
+              <div class="invalid-feedback" *ngIf="timeEntryForm.get('activity_date').invalid && timeEntryForm.get('activity_date').touched">
+                تاريخ النشاط مطلوب
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="activity_type">نوع النشاط</label>
+              <select 
+                id="activity_type" 
+                class="form-control" 
+                formControlName="activity_type"
+                [ngClass]="{'is-invalid': timeEntryForm.get('activity_type').invalid && timeEntryForm.get('activity_type').touched}"
+              >
+                <option [ngValue]="null">اختر نوع النشاط</option>
+                <option *ngFor="let type of activityTypes" [value]="type._id">{{ type.name }}</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="timeEntryForm.get('activity_type').invalid && timeEntryForm.get('activity_type').touched">
+                نوع النشاط مطلوب
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="case_id">القضية</label>
+              <select 
+                id="case_id" 
+                class="form-control" 
+                formControlName="case_id"
+              >
+                <option [ngValue]="null">اختر القضية</option>
+                <option *ngFor="let case of cases" [value]="case._id">{{ case.title }}</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="client_id">العميل</label>
+              <select 
+                id="client_id" 
+                class="form-control" 
+                formControlName="client_id"
+              >
+                <option [ngValue]="null">اختر العميل</option>
+                <option *ngFor="let client of clients" [value]="client._id">{{ client.name }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="task_id">المهمة</label>
+              <select 
+                id="task_id" 
+                class="form-control" 
+                formControlName="task_id"
+              >
+                <option [ngValue]="null">اختر المهمة</option>
+                <option *ngFor="let task of tasks" [value]="task._id">{{ task.title }}</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="duration_hours">المدة (بالساعات)</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  id="duration_hours" 
+                  class="form-control" 
+                  formControlName="duration_hours"
+                  step="0.01"
+                  min="0.01"
+                  [ngClass]="{'is-invalid': timeEntryForm.get('duration_hours').invalid && timeEntryForm.get('duration_hours').touched}"
+                >
+                <div class="input-group-append">
+                  <span class="input-group-text">ساعة</span>
+                </div>
+                <div class="invalid-feedback" *ngIf="timeEntryForm.get('duration_hours').invalid && timeEntryForm.get('duration_hours').touched">
+                  المدة مطلوبة ويجب أن تكون أكبر من صفر
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <label for="description">وصف النشاط</label>
+              <textarea 
+                id="description" 
+                class="form-control" 
+                formControlName="description"
+                rows="3"
+                [ngClass]="{'is-invalid': timeEntryForm.get('description').invalid && timeEntryForm.get('description').touched}"
+              ></textarea>
+              <div class="invalid-feedback" *ngIf="timeEntryForm.get('description').invalid && timeEntryForm.get('description').touched">
+                وصف النشاط مطلوب
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <div class="custom-control custom-checkbox">
+                <input 
+                  type="checkbox" 
+                  id="is_billable" 
+                  class="custom-control-input" 
+                  formControlName="is_billable"
+                >
+                <label class="custom-control-label" for="is_billable">قابل للفوترة</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6" *ngIf="timeEntryForm.get('is_billable').value">
+            <div class="form-group">
+              <label for="billing_rate">معدل الفوترة (بالساعة)</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  id="billing_rate" 
+                  class="form-control" 
+                  formControlName="billing_rate"
+                  step="0.01"
+                  min="0"
+                >
+                <div class="input-group-append">
+                  <span class="input-group-text">ريال</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="timer-controls mt-4 mb-4">
+          <div class="card">
+            <div class="card-header">
+              <h5>ساعة التوقيت</h5>
+            </div>
+            <div class="card-body">
+              <div class="timer-display text-center mb-3">
+                <h3>{{ timerDuration | number:'1.2-2' }} ساعة</h3>
+              </div>
+              <div class="btn-group d-flex">
+                <button 
+                  type="button" 
+                  class="btn btn-success" 
+                  (click)="startTimer()" 
+                  [disabled]="timerRunning"
+                >
+                  <i class="fas fa-play"></i> بدء
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-warning" 
+                  (click)="stopTimer()" 
+                  [disabled]="!timerRunning"
+                >
+                  <i class="fas fa-pause"></i> إيقاف
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-danger" 
+                  (click)="resetTimer()"
+                >
+                  <i class="fas fa-redo"></i> إعادة ضبط
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-actions text-left mt-4">
+          <button 
+            type="submit" 
+            class="btn btn-primary ml-2" 
+            [disabled]="isSubmitting"
+          >
+            <i class="fas fa-save"></i> حفظ
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="resetForm()"
+          >
+            <i class="fas fa-times"></i> إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

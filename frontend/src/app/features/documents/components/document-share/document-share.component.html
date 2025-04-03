@@ -1,0 +1,100 @@
+<div class="share-dialog-container">
+  <h2 mat-dialog-title>{{ 'DOCUMENTS.SHARE_TITLE' | translate }}</h2>
+  
+  <div class="document-info">
+    <mat-icon>insert_drive_file</mat-icon>
+    <span class="document-title">{{ data.documentTitle }}</span>
+  </div>
+  
+  <mat-dialog-content>
+    <div *ngIf="!shareableLink">
+      <form [formGroup]="shareForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'DOCUMENTS.SHARE_EXPIRY' | translate }}</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="expiryDate">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-hint>{{ 'DOCUMENTS.SHARE_EXPIRY_HINT' | translate }}</mat-hint>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'DOCUMENTS.SHARE_PASSWORD' | translate }}</mat-label>
+            <input matInput type="password" formControlName="password">
+            <mat-hint>{{ 'DOCUMENTS.SHARE_PASSWORD_HINT' | translate }}</mat-hint>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row permissions-row">
+          <mat-checkbox formControlName="allowDownload">
+            {{ 'DOCUMENTS.SHARE_ALLOW_DOWNLOAD' | translate }}
+          </mat-checkbox>
+          
+          <mat-checkbox formControlName="allowPrint">
+            {{ 'DOCUMENTS.SHARE_ALLOW_PRINT' | translate }}
+          </mat-checkbox>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'DOCUMENTS.SHARE_EMAILS' | translate }}</mat-label>
+            <input matInput formControlName="recipientEmails" placeholder="email1@example.com, email2@example.com">
+            <mat-hint>{{ 'DOCUMENTS.SHARE_EMAILS_HINT' | translate }}</mat-hint>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ 'DOCUMENTS.SHARE_MESSAGE' | translate }}</mat-label>
+            <textarea matInput formControlName="message" rows="3"></textarea>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" mat-button (click)="close()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+          <button type="submit" mat-raised-button color="primary" [disabled]="shareForm.invalid || isLoading">
+            <mat-icon>share</mat-icon>
+            {{ 'DOCUMENTS.SHARE_BUTTON' | translate }}
+          </button>
+        </div>
+      </form>
+      
+      <div class="loading-container" *ngIf="isLoading">
+        <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+        <p>{{ 'DOCUMENTS.SHARE_GENERATING' | translate }}</p>
+      </div>
+    </div>
+    
+    <div class="share-result" *ngIf="shareableLink">
+      <p class="success-message">
+        <mat-icon>check_circle</mat-icon>
+        {{ 'DOCUMENTS.SHARE_SUCCESS_MESSAGE' | translate }}
+      </p>
+      
+      <div class="link-container">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.SHARE_LINK' | translate }}</mat-label>
+          <input matInput [value]="shareableLink" readonly>
+        </mat-form-field>
+        
+        <button mat-icon-button color="primary" (click)="copyLink()" [matTooltip]="copySuccess ? ('DOCUMENTS.SHARE_COPIED' | translate) : ('DOCUMENTS.SHARE_COPY' | translate)">
+          <mat-icon>{{ copySuccess ? 'check' : 'content_copy' }}</mat-icon>
+        </button>
+      </div>
+      
+      <div class="share-instructions">
+        <p>{{ 'DOCUMENTS.SHARE_INSTRUCTIONS' | translate }}</p>
+      </div>
+    </div>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end" *ngIf="shareableLink">
+    <button mat-button (click)="close()">
+      {{ 'COMMON.CLOSE' | translate }}
+    </button>
+  </mat-dialog-actions>
+</div>

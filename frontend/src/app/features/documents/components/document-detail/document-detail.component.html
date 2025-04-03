@@ -1,0 +1,311 @@
+<div class="document-detail-container">
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" matTooltip="{{ 'COMMON.BACK' | translate }}">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title" *ngIf="document && !isEditing">{{ document.title }}</h1>
+    <div class="actions-container" *ngIf="document && !isEditing">
+      <button mat-icon-button (click)="toggleEdit()" matTooltip="{{ 'COMMON.EDIT' | translate }}">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button (click)="downloadDocument()" matTooltip="{{ 'COMMON.DOWNLOAD' | translate }}">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button mat-icon-button (click)="shareDocument()" matTooltip="{{ 'COMMON.SHARE' | translate }}">
+        <mat-icon>share</mat-icon>
+      </button>
+      <button mat-icon-button (click)="viewVersions()" matTooltip="{{ 'DOCUMENTS.VIEW_VERSIONS' | translate }}">
+        <mat-icon>history</mat-icon>
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="More actions">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="analyzeDocument()">
+          <mat-icon>psychology</mat-icon>
+          <span>{{ 'DOCUMENTS.ANALYZE' | translate }}</span>
+        </button>
+        <button mat-menu-item (click)="deleteDocument()">
+          <mat-icon>delete</mat-icon>
+          <span>{{ 'COMMON.DELETE' | translate }}</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="loadDocument()">
+      {{ 'COMMON.TRY_AGAIN' | translate }}
+    </button>
+  </div>
+
+  <div class="document-content" *ngIf="document && !isLoading && !error">
+    <!-- Edit Form -->
+    <div class="edit-form-container" *ngIf="isEditing">
+      <h2>{{ 'DOCUMENTS.EDIT_DOCUMENT' | translate }}</h2>
+      <form [formGroup]="editForm" (ngSubmit)="saveChanges()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.TITLE_FIELD' | translate }}</mat-label>
+          <input matInput formControlName="title" required>
+          <mat-error *ngIf="editForm.get('title')?.hasError('required')">
+            {{ 'DOCUMENTS.TITLE_REQUIRED' | translate }}
+          </mat-error>
+          <mat-error *ngIf="editForm.get('title')?.hasError('maxlength')">
+            {{ 'DOCUMENTS.TITLE_TOO_LONG' | translate }}
+          </mat-error>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.DESCRIPTION_FIELD' | translate }}</mat-label>
+          <textarea matInput formControlName="description" rows="3"></textarea>
+          <mat-error *ngIf="editForm.get('description')?.hasError('maxlength')">
+            {{ 'DOCUMENTS.DESCRIPTION_TOO_LONG' | translate }}
+          </mat-error>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.CATEGORY_FIELD' | translate }}</mat-label>
+          <mat-select formControlName="categoryId">
+            <mat-option [value]="">{{ 'DOCUMENTS.NO_CATEGORY' | translate }}</mat-option>
+            <mat-option *ngFor="let category of categories" [value]="category.id">
+              {{ category.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.TAGS_FIELD' | translate }}</mat-label>
+          <input matInput formControlName="tags" placeholder="{{ 'DOCUMENTS.TAGS_PLACEHOLDER' | translate }}">
+          <mat-hint>{{ 'DOCUMENTS.TAGS_HINT' | translate }}</mat-hint>
+        </mat-form-field>
+        
+        <div class="form-actions">
+          <button type="button" mat-button (click)="toggleEdit()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+          <button type="submit" mat-raised-button color="primary" [disabled]="editForm.invalid">
+            {{ 'COMMON.SAVE' | translate }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Document Details -->
+    <div class="document-details" *ngIf="!isEditing">
+      <mat-card>
+        <mat-card-content>
+          <div class="document-header">
+            <div class="document-icon">
+              <mat-icon [ngClass]="'file-icon-' + (document.fileType.split('/')[1] || 'generic')">
+                insert_drive_file
+              </mat-icon>
+            </div>
+            <div class="document-meta">
+              <div class="document-status">
+                <span class="status-badge" [ngClass]="getStatusClass(document.status)">
+                  {{ 'DOCUMENTS.STATUS.' + document.status.toUpperCase() | translate }}
+                </span>
+                <span class="document-version">{{ 'DOCUMENTS.VERSION' | translate }}: {{ document.versionNumber }}</span>
+              </div>
+              <div class="document-dates">
+                <span class="upload-date">{{ 'DOCUMENTS.UPLOADED' | translate }}: {{ document.uploadDate | date:'medium' }}</span>
+                <span class="modified-date">{{ 'DOCUMENTS.MODIFIED' | translate }}: {{ document.lastModified | date:'medium' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="document-info-section">
+            <h3>{{ 'DOCUMENTS.DETAILS' | translate }}</h3>
+            <div class="info-grid">
+              <div class="info-row">
+                <span class="info-label">{{ 'DOCUMENTS.FILE_NAME' | translate }}</span>
+                <span class="info-value">{{ document.fileName }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ 'DOCUMENTS.FILE_SIZE' | translate }}</span>
+                <span class="info-value">{{ document.fileSize | number }} bytes</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ 'DOCUMENTS.FILE_TYPE' | translate }}</span>
+                <span class="info-value">{{ document.fileType }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ 'DOCUMENTS.CATEGORY' | translate }}</span>
+                <span class="info-value">{{ document.categoryName || ('DOCUMENTS.NO_CATEGORY' | translate) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ 'DOCUMENTS.CREATED_BY' | translate }}</span>
+                <span class="info-value">{{ document.createdBy }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="document-description-section" *ngIf="document.description">
+            <h3>{{ 'DOCUMENTS.DESCRIPTION' | translate }}</h3>
+            <p class="document-description">{{ document.description }}</p>
+          </div>
+
+          <div class="document-tags-section" *ngIf="document.tags && document.tags.length > 0">
+            <h3>{{ 'DOCUMENTS.TAGS' | translate }}</h3>
+            <div class="tags-container">
+              <mat-chip-list>
+                <mat-chip *ngFor="let tag of document.tags">{{ tag }}</mat-chip>
+              </mat-chip-list>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Document Preview -->
+      <mat-card class="preview-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'DOCUMENTS.PREVIEW' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="preview-content">
+          <!-- For images -->
+          <div class="image-preview" *ngIf="document.fileType.startsWith('image/')">
+            <img [src]="document.downloadUrl" alt="Document preview" *ngIf="document.downloadUrl">
+            <div class="no-preview" *ngIf="!document.downloadUrl">
+              <mat-icon>image</mat-icon>
+              <p>{{ 'DOCUMENTS.PREVIEW_NOT_AVAILABLE' | translate }}</p>
+              <button mat-button color="primary" (click)="downloadDocument()">
+                {{ 'DOCUMENTS.DOWNLOAD_TO_VIEW' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <!-- For PDFs -->
+          <div class="pdf-preview" *ngIf="document.fileType === 'application/pdf'">
+            <div class="no-preview">
+              <mat-icon>picture_as_pdf</mat-icon>
+              <p>{{ 'DOCUMENTS.PDF_PREVIEW' | translate }}</p>
+              <button mat-button color="primary" (click)="downloadDocument()">
+                {{ 'DOCUMENTS.DOWNLOAD_PDF' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <!-- For other file types -->
+          <div class="no-preview" *ngIf="!document.fileType.startsWith('image/') && document.fileType !== 'application/pdf'">
+            <mat-icon>insert_drive_file</mat-icon>
+            <p>{{ 'DOCUMENTS.NO_PREVIEW_AVAILABLE' | translate }}</p>
+            <button mat-button color="primary" (click)="downloadDocument()">
+              {{ 'DOCUMENTS.DOWNLOAD_FILE' | translate }}
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Document Analysis -->
+      <mat-card class="analysis-card" *ngIf="analysisResult || isAnalyzing">
+        <mat-card-header>
+          <mat-card-title>{{ 'DOCUMENTS.ANALYSIS' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="loading-container" *ngIf="isAnalyzing">
+            <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+            <p class="loading-text">{{ 'DOCUMENTS.ANALYZING' | translate }}</p>
+          </div>
+
+          <div class="analysis-results" *ngIf="analysisResult && !isAnalyzing">
+            <!-- Document Classification -->
+            <div class="analysis-section" *ngIf="analysisResult.classification">
+              <h3>{{ 'DOCUMENTS.CLASSIFICATION' | translate }}</h3>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="info-label">{{ 'DOCUMENTS.DOC_TYPE' | translate }}</span>
+                  <span class="info-value">{{ analysisResult.classification.documentType }}</span>
+                </div>
+                <div class="info-row" *ngIf="analysisResult.classification.subcategory">
+                  <span class="info-label">{{ 'DOCUMENTS.SUBCATEGORY' | translate }}</span>
+                  <span class="info-value">{{ analysisResult.classification.subcategory }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">{{ 'DOCUMENTS.CONFIDENCE' | translate }}</span>
+                  <span class="info-value">{{ analysisResult.classification.confidence | percent }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">{{ 'DOCUMENTS.LANGUAGE' | translate }}</span>
+                  <span class="info-value">{{ analysisResult.classification.language }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Entities Extraction -->
+            <div class="analysis-section" *ngIf="analysisResult.entities">
+              <h3>{{ 'DOCUMENTS.ENTITIES' | translate }}</h3>
+              <mat-accordion>
+                <mat-expansion-panel *ngIf="analysisResult.entities.people && analysisResult.entities.people.length > 0">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ 'DOCUMENTS.PEOPLE' | translate }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <mat-list>
+                    <mat-list-item *ngFor="let person of analysisResult.entities.people">{{ person }}</mat-list-item>
+                  </mat-list>
+                </mat-expansion-panel>
+
+                <mat-expansion-panel *ngIf="analysisResult.entities.organizations && analysisResult.entities.organizations.length > 0">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ 'DOCUMENTS.ORGANIZATIONS' | translate }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <mat-list>
+                    <mat-list-item *ngFor="let org of analysisResult.entities.organizations">{{ org }}</mat-list-item>
+                  </mat-list>
+                </mat-expansion-panel>
+
+                <mat-expansion-panel *ngIf="analysisResult.entities.locations && analysisResult.entities.locations.length > 0">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ 'DOCUMENTS.LOCATIONS' | translate }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <mat-list>
+                    <mat-list-item *ngFor="let location of analysisResult.entities.locations">{{ location }}</mat-list-item>
+                  </mat-list>
+                </mat-expansion-panel>
+
+                <mat-expansion-panel *ngIf="analysisResult.entities.dates && analysisResult.entities.dates.length > 0">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ 'DOCUMENTS.DATES' | translate }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <mat-list>
+                    <mat-list-item *ngFor="let date of analysisResult.entities.dates">{{ date }}</mat-list-item>
+                  </mat-list>
+                </mat-expansion-panel>
+
+                <mat-expansion-panel *ngIf="analysisResult.entities.monetaryValues && analysisResult.entities.monetaryValues.length > 0">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ 'DOCUMENTS.MONETARY_VALUES' | translate }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <mat-list>
+                    <mat-list-item *ngFor="let value of analysisResult.entities.monetaryValues">{{ value }}</mat-list-item>
+                  </mat-list>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+
+            <!-- Summary -->
+            <div class="analysis-section" *ngIf="analysisResult.summary">
+              <h3>{{ 'DOCUMENTS.SUMMARY' | translate }}</h3>
+              <p class="summary-text">{{ analysisResult.summary }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
