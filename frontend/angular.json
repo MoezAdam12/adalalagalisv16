@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "adalalegalis-frontend": {
+    "adalalegalis": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -41,36 +41,21 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/adalalegalis-frontend",
+            "outputPath": "dist/adalalegalis",
             "index": "src/index.html",
             "main": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              {
-                "glob": "**/*",
-                "input": "src/assets/icons",
-                "output": "assets/icons/"
-              },
-              {
-                "glob": "**/*",
-                "input": "src/assets/images",
-                "output": "assets/images/"
-              },
-              {
-                "glob": "**/*",
-                "input": "src/assets/fonts",
-                "output": "assets/fonts/"
-              },
-              "src/manifest.webmanifest"
+              "src/manifest.webmanifest",
+              "src/robots.txt",
+              "src/.htaccess"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles/styles.scss"
             ],
             "scripts": [],
             "serviceWorker": true,
@@ -78,9 +63,7 @@
             "allowedCommonJsDependencies": [
               "chart.js",
               "moment",
-              "quill",
-              "file-saver",
-              "crypto-js"
+              "lodash"
             ],
             "vendorChunk": true,
             "extractLicenses": false,
@@ -122,8 +105,7 @@
                   "inlineCritical": true
                 },
                 "fonts": true
-              },
-              "serviceWorker": true
+              }
             },
             "staging": {
               "budgets": [
@@ -146,11 +128,10 @@
               ],
               "outputHashing": "all",
               "sourceMap": true,
-              "namedChunks": true,
+              "namedChunks": false,
               "extractLicenses": true,
               "vendorChunk": false,
-              "buildOptimizer": true,
-              "optimization": true
+              "buildOptimizer": true
             },
             "development": {
               "buildOptimizer": false,
@@ -167,53 +148,44 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "adalalegalis-frontend:build:production"
+              "browserTarget": "adalalegalis:build:production"
             },
             "staging": {
-              "browserTarget": "adalalegalis-frontend:build:staging"
+              "browserTarget": "adalalegalis:build:staging"
             },
             "development": {
-              "browserTarget": "adalalegalis-frontend:build:development"
+              "browserTarget": "adalalegalis:build:development"
             }
           },
           "defaultConfiguration": "development",
           "options": {
-            "proxyConfig": "src/proxy.conf.json",
-            "port": 4200,
-            "host": "0.0.0.0",
-            "disableHostCheck": true
+            "proxyConfig": "src/proxy.conf.json"
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "adalalegalis-frontend:build"
+            "browserTarget": "adalalegalis:build"
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "main": "src/test.ts",
+            "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.spec.json",
-            "inlineStyleLanguage": "scss",
             "karmaConfig": "karma.conf.js",
+            "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
               "src/assets",
               "src/manifest.webmanifest"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles/styles.scss"
             ],
             "scripts": [],
-            "codeCoverage": true,
-            "codeCoverageExclude": [
-              "src/test/**/*",
-              "src/environments/**/*"
-            ]
+            "codeCoverage": true
           }
         },
         "lint": {
@@ -229,63 +201,30 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "adalalegalis-frontend:serve"
+            "devServerTarget": "adalalegalis:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "adalalegalis-frontend:serve:production"
+              "devServerTarget": "adalalegalis:serve:production"
             }
           }
         },
-        "server": {
-          "builder": "@angular-devkit/build-angular:server",
+        "cypress-run": {
+          "builder": "@cypress/schematic:cypress",
           "options": {
-            "outputPath": "dist/adalalegalis-frontend/server",
-            "main": "server.ts",
-            "tsConfig": "tsconfig.server.json",
-            "inlineStyleLanguage": "scss",
-            "optimization": false,
-            "sourceMap": true
+            "devServerTarget": "adalalegalis:serve"
           },
           "configurations": {
             "production": {
-              "outputHashing": "media",
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
-                }
-              ],
-              "sourceMap": false,
-              "optimization": true
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "serve-ssr": {
-          "builder": "@nguniversal/builders:ssr-dev-server",
-          "options": {
-            "browserTarget": "adalalegalis-frontend:build",
-            "serverTarget": "adalalegalis-frontend:server"
-          },
-          "configurations": {
-            "production": {
-              "browserTarget": "adalalegalis-frontend:build:production",
-              "serverTarget": "adalalegalis-frontend:server:production"
+              "devServerTarget": "adalalegalis:serve:production"
             }
           }
         },
-        "prerender": {
-          "builder": "@nguniversal/builders:prerender",
+        "cypress-open": {
+          "builder": "@cypress/schematic:cypress",
           "options": {
-            "browserTarget": "adalalegalis-frontend:build:production",
-            "serverTarget": "adalalegalis-frontend:server:production",
-            "routes": [
-              "/"
-            ]
-          },
-          "configurations": {
-            "production": {}
+            "watch": true,
+            "headless": false
           }
         }
       }
@@ -295,11 +234,6 @@
     "analytics": false,
     "schematicCollections": [
       "@angular-eslint/schematics"
-    ],
-    "cache": {
-      "enabled": true,
-      "path": ".angular/cache",
-      "environment": "all"
-    }
+    ]
   }
 }

@@ -63,5 +63,15 @@ export const environment = {
   devTools: {
     enabled: true,
     mockApiEnabled: false
+  },
+  debug: {
+
+    enabled: true
+
+  },
+  analytics: {
+
+    logErrors: true
+
   }
 };
