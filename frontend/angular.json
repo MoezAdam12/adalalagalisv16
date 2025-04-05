@@ -159,6 +159,7 @@
           },
           "defaultConfiguration": "development",
           "options": {
+            "buildTarget": "adalalegalis:build:development",
             "proxyConfig": "src/proxy.conf.json"
           }
         },
@@ -185,7 +186,22 @@
               "src/styles/styles.scss"
             ],
             "scripts": [],
-            "codeCoverage": true
+            "codeCoverage": true,
+            "coverage": {
+              "dir": "coverage",
+              "subdir": ".",
+              "reporters": [
+                {
+                  "type": "html"
+                },
+                {
+                  "type": "lcov"
+                },
+                {
+                  "type": "text-summary"
+                }
+              ]
+            }
           }
         },
         "lint": {
@@ -235,5 +251,34 @@
     "schematicCollections": [
       "@angular-eslint/schematics"
     ]
+  },
+  "schematics": {
+    "@schematics/angular:component": {
+      "style": "scss",
+      "skipTests": false,
+      "changeDetection": "OnPush",
+      "displayBlock": true
+    },
+    "@schematics/angular:service": {
+      "skipTests": false
+    },
+    "@schematics/angular:class": {
+      "skipTests": true
+    },
+    "@schematics/angular:directive": {
+      "skipTests": false
+    },
+    "@schematics/angular:guard": {
+      "skipTests": false
+    },
+    "@schematics/angular:interceptor": {
+      "skipTests": false
+    },
+    "@schematics/angular:pipe": {
+      "skipTests": false
+    },
+    "@schematics/angular:application": {
+      "strict": true
+    }
   }
 }
