@@ -1,0 +1,153 @@
+<div class="language-form-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ isEditMode ? 'تعديل اللغة' : 'إضافة لغة جديدة' }}</h2>
+    </div>
+    <div class="card-body">
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+      <div *ngIf="loading" class="text-center p-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+
+      <form [formGroup]="languageForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="code" class="form-label">رمز اللغة <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="code" 
+              formControlName="code"
+              [ngClass]="{'is-invalid': languageForm.get('code')?.invalid && languageForm.get('code')?.touched}"
+            >
+            <div class="invalid-feedback" *ngIf="languageForm.get('code')?.invalid && languageForm.get('code')?.touched">
+              <span *ngIf="languageForm.get('code')?.errors?.['required']">رمز اللغة مطلوب</span>
+              <span *ngIf="languageForm.get('code')?.errors?.['pattern']">يجب أن يكون رمز اللغة بتنسيق صحيح (مثل: ar أو en-US)</span>
+            </div>
+            <small class="form-text text-muted" *ngIf="!isEditMode">
+              استخدم رمز ISO 639-1 أو ISO 639-2 للغة (مثل: ar للعربية، en للإنجليزية)
+            </small>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">اسم اللغة <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="name" 
+              formControlName="name"
+              [ngClass]="{'is-invalid': languageForm.get('name')?.invalid && languageForm.get('name')?.touched}"
+            >
+            <div class="invalid-feedback" *ngIf="languageForm.get('name')?.invalid && languageForm.get('name')?.touched">
+              اسم اللغة مطلوب
+            </div>
+            <small class="form-text text-muted">
+              اسم اللغة باللغة الإنجليزية (مثل: Arabic، English)
+            </small>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="native_name" class="form-label">الاسم الأصلي للغة <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="native_name" 
+              formControlName="native_name"
+              [ngClass]="{'is-invalid': languageForm.get('native_name')?.invalid && languageForm.get('native_name')?.touched}"
+            >
+            <div class="invalid-feedback" *ngIf="languageForm.get('native_name')?.invalid && languageForm.get('native_name')?.touched">
+              الاسم الأصلي للغة مطلوب
+            </div>
+            <small class="form-text text-muted">
+              اسم اللغة بلغتها الأصلية (مثل: العربية، English)
+            </small>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="flag_icon" class="form-label">رمز العلم</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="flag_icon" 
+              formControlName="flag_icon"
+            >
+            <small class="form-text text-muted">
+              رمز العلم (مثل: sa للسعودية، us للولايات المتحدة)
+            </small>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="text_direction" class="form-label">اتجاه النص <span class="text-danger">*</span></label>
+            <select 
+              class="form-select" 
+              id="text_direction" 
+              formControlName="text_direction"
+              [ngClass]="{'is-invalid': languageForm.get('text_direction')?.invalid && languageForm.get('text_direction')?.touched}"
+            >
+              <option *ngFor="let direction of textDirections" [value]="direction.value">{{ direction.label }}</option>
+            </select>
+            <div class="invalid-feedback" *ngIf="languageForm.get('text_direction')?.invalid && languageForm.get('text_direction')?.touched">
+              اتجاه النص مطلوب
+            </div>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="sort_order" class="form-label">ترتيب العرض</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="sort_order" 
+              formControlName="sort_order"
+              min="0"
+            >
+            <small class="form-text text-muted">
+              ترتيب عرض اللغة في القوائم (الأرقام الأصغر تظهر أولاً)
+            </small>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <div class="form-check form-switch mt-4">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="is_active" 
+                formControlName="is_active"
+              >
+              <label class="form-check-label" for="is_active">
+                تفعيل اللغة
+              </label>
+            </div>
+            
+            <div class="form-check form-switch mt-2">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="is_default" 
+                formControlName="is_default"
+              >
+              <label class="form-check-label" for="is_default">
+                تعيين كلغة افتراضية
+              </label>
+              <small class="form-text text-muted d-block">
+                سيتم استخدام هذه اللغة كلغة افتراضية للنظام
+              </small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">
+            إلغاء
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="languageForm.invalid">
+            <i class="bi bi-save me-1"></i> {{ isEditMode ? 'حفظ التغييرات' : 'إضافة اللغة' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

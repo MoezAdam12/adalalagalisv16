@@ -1,0 +1,213 @@
+<div class="email-template-form-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ isEditMode ? 'تعديل قالب البريد الإلكتروني' : 'إضافة قالب بريد إلكتروني جديد' }}</h2>
+    </div>
+    <div class="card-body">
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+      <div *ngIf="loading" class="text-center p-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+
+      <form [formGroup]="templateForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+        <div class="row">
+          <!-- Basic Information -->
+          <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">اسم القالب <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="name" 
+              formControlName="name"
+              [ngClass]="{'is-invalid': templateForm.get('name')?.invalid && templateForm.get('name')?.touched}"
+            >
+            <div class="invalid-feedback" *ngIf="templateForm.get('name')?.invalid && templateForm.get('name')?.touched">
+              اسم القالب مطلوب
+            </div>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="code" class="form-label">رمز القالب <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="code" 
+              formControlName="code"
+              [ngClass]="{'is-invalid': templateForm.get('code')?.invalid && templateForm.get('code')?.touched}"
+            >
+            <div class="invalid-feedback" *ngIf="templateForm.get('code')?.invalid && templateForm.get('code')?.touched">
+              <span *ngIf="templateForm.get('code')?.errors?.['required']">رمز القالب مطلوب</span>
+              <span *ngIf="templateForm.get('code')?.errors?.['pattern']">يجب أن يحتوي الرمز على أحرف صغيرة وأرقام وشرطات سفلية فقط</span>
+            </div>
+            <small class="form-text text-muted" *ngIf="!isEditMode">
+              الرمز يجب أن يكون فريداً ويستخدم للإشارة إلى القالب في النظام
+            </small>
+          </div>
+          
+          <div class="col-md-12 mb-3">
+            <label for="description" class="form-label">الوصف</label>
+            <textarea 
+              class="form-control" 
+              id="description" 
+              formControlName="description"
+              rows="2"
+            ></textarea>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="category" class="form-label">الفئة <span class="text-danger">*</span></label>
+            <select 
+              class="form-select" 
+              id="category" 
+              formControlName="category"
+              [ngClass]="{'is-invalid': templateForm.get('category')?.invalid && templateForm.get('category')?.touched}"
+            >
+              <option value="">اختر الفئة</option>
+              <option *ngFor="let category of categories" [value]="category.value">{{ category.label }}</option>
+            </select>
+            <div class="invalid-feedback" *ngIf="templateForm.get('category')?.invalid && templateForm.get('category')?.touched">
+              الفئة مطلوبة
+            </div>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label for="is_active" class="form-label">الحالة</label>
+            <div class="form-check form-switch mt-2">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="is_active" 
+                formControlName="is_active"
+              >
+              <label class="form-check-label" for="is_active">
+                {{ templateForm.get('is_active')?.value ? 'مفعل' : 'معطل' }}
+              </label>
+            </div>
+          </div>
+          
+          <!-- Email Content -->
+          <div class="col-md-12 mb-3">
+            <label for="subject" class="form-label">موضوع البريد الإلكتروني <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="subject" 
+              formControlName="subject"
+              [ngClass]="{'is-invalid': templateForm.get('subject')?.invalid && templateForm.get('subject')?.touched}"
+            >
+            <div class="invalid-feedback" *ngIf="templateForm.get('subject')?.invalid && templateForm.get('subject')?.touched">
+              موضوع البريد الإلكتروني مطلوب
+            </div>
+          </div>
+          
+          <!-- Variables Section -->
+          <div class="col-md-12 mb-3">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">المتغيرات</h5>
+                <p class="text-muted mb-0">المتغيرات التي يمكن استخدامها في القالب</p>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <div class="input-group">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      placeholder="اسم المتغير" 
+                      #newVariable
+                    >
+                    <button 
+                      type="button" 
+                      class="btn btn-primary" 
+                      (click)="addVariable(newVariable.value); newVariable.value = ''"
+                    >
+                      إضافة
+                    </button>
+                  </div>
+                  <small class="form-text text-muted">
+                    أدخل اسم المتغير بدون الأقواس، مثال: user_name
+                  </small>
+                </div>
+                
+                <div class="variables-list">
+                  <span 
+                    *ngFor="let variable of variablesList" 
+                    class="badge bg-info me-2 mb-2 p-2"
+                  >
+                    {{ variable }}
+                    <button 
+                      type="button" 
+                      class="btn-close btn-close-white ms-2" 
+                      aria-label="حذف" 
+                      (click)="removeVariable(variable)"
+                      style="font-size: 0.5rem;"
+                    ></button>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-light ms-1" 
+                      (click)="insertVariable(variable)"
+                      style="font-size: 0.6rem; padding: 0.1rem 0.3rem;"
+                    >
+                      إدراج
+                    </button>
+                  </span>
+                  <p *ngIf="variablesList.length === 0" class="text-muted">
+                    لا توجد متغيرات محددة
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-12 mb-3">
+            <label for="body_html" class="form-label">محتوى البريد الإلكتروني (HTML) <span class="text-danger">*</span></label>
+            <textarea 
+              class="form-control" 
+              id="body_html" 
+              formControlName="body_html"
+              rows="10"
+              [ngClass]="{'is-invalid': templateForm.get('body_html')?.invalid && templateForm.get('body_html')?.touched}"
+            ></textarea>
+            <div class="invalid-feedback" *ngIf="templateForm.get('body_html')?.invalid && templateForm.get('body_html')?.touched">
+              محتوى البريد الإلكتروني مطلوب
+            </div>
+            <small class="form-text text-muted">
+              استخدم الصيغة {{variable_name}} لإدراج المتغيرات في المحتوى
+            </small>
+          </div>
+          
+          <div class="col-md-12 mb-3">
+            <label for="body_text" class="form-label">محتوى البريد الإلكتروني (نص عادي)</label>
+            <textarea 
+              class="form-control" 
+              id="body_text" 
+              formControlName="body_text"
+              rows="5"
+            ></textarea>
+            <small class="form-text text-muted">
+              اختياري: إذا تركت هذا الحقل فارغاً، سيتم إنشاء نسخة نصية تلقائياً من محتوى HTML
+            </small>
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">
+            إلغاء
+          </button>
+          <div>
+            <button type="button" class="btn btn-info me-2" (click)="previewTemplate()">
+              <i class="bi bi-eye me-1"></i> معاينة
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="templateForm.invalid">
+              <i class="bi bi-save me-1"></i> {{ isEditMode ? 'حفظ التغييرات' : 'إنشاء القالب' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

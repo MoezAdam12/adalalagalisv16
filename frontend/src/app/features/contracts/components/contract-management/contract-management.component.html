@@ -1,0 +1,225 @@
+<div class="contract-management-container" dir="rtl">
+  <!-- شريط العنوان -->
+  <div class="page-header">
+    <div class="header-title">
+      <h1>إدارة العقود</h1>
+      <p class="header-subtitle">إدارة وتتبع جميع العقود القانونية</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="openAddContractDialog()">
+        <mat-icon>add</mat-icon>
+        إضافة عقد جديد
+      </button>
+    </div>
+  </div>
+
+  <!-- بطاقات الإحصائيات -->
+  <div class="statistics-cards">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">إجمالي العقود</h3>
+        <p class="stat-value">{{ statistics.totalContracts }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <mat-icon>verified</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">العقود النشطة</h3>
+        <p class="stat-value">{{ statistics.activeContracts }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <mat-icon>schedule</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">عقود على وشك الانتهاء</h3>
+        <p class="stat-value">{{ statistics.expiringContracts }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-danger">
+        <mat-icon>event_busy</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">العقود المنتهية</h3>
+        <p class="stat-value">{{ statistics.expiredContracts }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-info">
+        <mat-icon>edit_note</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">مسودات العقود</h3>
+        <p class="stat-value">{{ statistics.draftContracts }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-secondary">
+        <mat-icon>payments</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">إجمالي القيمة</h3>
+        <p class="stat-value">{{ formatCurrency(statistics.totalValue) }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- مرشحات البحث -->
+  <div class="filters-section">
+    <mat-card>
+      <mat-card-content>
+        <div class="filters-container">
+          <div class="search-filter">
+            <mat-form-field appearance="outline">
+              <mat-label>بحث في العقود</mat-label>
+              <input matInput (keyup)="applyFilter($event)" placeholder="البحث برقم العقد، العنوان، أو اسم العميل">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="status-filter">
+            <mat-form-field appearance="outline">
+              <mat-label>تصفية حسب الحالة</mat-label>
+              <mat-select [(value)]="statusFilter" (selectionChange)="applyStatusFilter($event.value)">
+                <mat-option value="all">جميع الحالات</mat-option>
+                <mat-option *ngFor="let status of contractStatuses" [value]="status">{{ status }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="type-filter">
+            <mat-form-field appearance="outline">
+              <mat-label>تصفية حسب النوع</mat-label>
+              <mat-select [(value)]="typeFilter" (selectionChange)="applyTypeFilter($event.value)">
+                <mat-option value="all">جميع الأنواع</mat-option>
+                <mat-option *ngFor="let type of contractTypes" [value]="type">{{ type }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="filter-actions">
+            <button mat-button color="warn" (click)="resetFilters()">
+              <mat-icon>clear</mat-icon>
+              إعادة تعيين
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- جدول العقود -->
+  <div class="table-container">
+    <div class="loading-shade" *ngIf="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+
+    <table mat-table [dataSource]="dataSource" matSort class="contracts-table">
+      <!-- عمود رقم العقد -->
+      <ng-container matColumnDef="contractNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> رقم العقد </th>
+        <td mat-cell *matCellDef="let contract"> {{ contract.contractNumber }} </td>
+      </ng-container>
+
+      <!-- عمود عنوان العقد -->
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> عنوان العقد </th>
+        <td mat-cell *matCellDef="let contract"> {{ contract.title }} </td>
+      </ng-container>
+
+      <!-- عمود العميل -->
+      <ng-container matColumnDef="client">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> العميل </th>
+        <td mat-cell *matCellDef="let contract"> {{ contract.client.name }} </td>
+      </ng-container>
+
+      <!-- عمود نوع العقد -->
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> النوع </th>
+        <td mat-cell *matCellDef="let contract"> {{ contract.type }} </td>
+      </ng-container>
+
+      <!-- عمود حالة العقد -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> الحالة </th>
+        <td mat-cell *matCellDef="let contract">
+          <span class="status-badge" [ngClass]="'status-' + getStatusColor(contract.status)">
+            {{ contract.status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- عمود تاريخ البداية -->
+      <ng-container matColumnDef="startDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ البداية </th>
+        <td mat-cell *matCellDef="let contract"> {{ formatDate(contract.startDate) }} </td>
+      </ng-container>
+
+      <!-- عمود تاريخ الانتهاء -->
+      <ng-container matColumnDef="endDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ الانتهاء </th>
+        <td mat-cell *matCellDef="let contract" [ngClass]="{'expiring-contract': isContractExpiring(contract), 'expired-contract': isContractExpired(contract)}">
+          {{ formatDate(contract.endDate) }}
+        </td>
+      </ng-container>
+
+      <!-- عمود قيمة العقد -->
+      <ng-container matColumnDef="value">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> القيمة </th>
+        <td mat-cell *matCellDef="let contract"> {{ formatCurrency(contract.value) }} </td>
+      </ng-container>
+
+      <!-- عمود الإجراءات -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> الإجراءات </th>
+        <td mat-cell *matCellDef="let contract">
+          <div class="action-buttons">
+            <button mat-icon-button color="primary" matTooltip="عرض التفاصيل" (click)="viewContractDetails(contract.id)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button color="accent" matTooltip="تعديل" (click)="openEditContractDialog(contract)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="success" matTooltip="تجديد العقد" 
+                    [disabled]="contract.status !== 'نشط' && contract.status !== 'منتهي'"
+                    (click)="openRenewContractDialog(contract)">
+              <mat-icon>autorenew</mat-icon>
+            </button>
+            <button mat-icon-button [matMenuTriggerFor]="statusMenu" matTooltip="تغيير الحالة">
+              <mat-icon>swap_horiz</mat-icon>
+            </button>
+            <mat-menu #statusMenu="matMenu">
+              <button mat-menu-item *ngFor="let status of contractStatuses" 
+                      [disabled]="contract.status === status"
+                      (click)="openStatusChangeConfirmation(contract, status)">
+                {{ status }}
+              </button>
+            </mat-menu>
+            <button mat-icon-button color="warn" matTooltip="حذف" (click)="openDeleteConfirmation(contract)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- صف عدم وجود بيانات -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+          <div class="no-data-message">
+            <mat-icon>search_off</mat-icon>
+            <p>لا توجد عقود مطابقة للبحث</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من العقود"></mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,296 @@
+<div class="landing-container" dir="rtl">
+  <!-- شريط التنقل -->
+  <nav class="navbar" [ngClass]="{'scrolled': isScrolled}">
+    <div class="container">
+      <div class="navbar-brand">
+        <img src="assets/images/logo.svg" alt="Adalalegalis Logo" class="navbar-logo">
+        <span class="navbar-title">Adalalegalis</span>
+      </div>
+      <div class="navbar-menu">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a href="#features" class="nav-link" (click)="scrollToSection('features')">المميزات</a>
+          </li>
+          <li class="nav-item">
+            <a href="#pricing" class="nav-link" (click)="scrollToSection('pricing')">الأسعار</a>
+          </li>
+          <li class="nav-item">
+            <a href="#testimonials" class="nav-link" (click)="scrollToSection('testimonials')">آراء العملاء</a>
+          </li>
+          <li class="nav-item">
+            <a href="#faq" class="nav-link" (click)="scrollToSection('faq')">الأسئلة الشائعة</a>
+          </li>
+          <li class="nav-item">
+            <a href="#contact" class="nav-link" (click)="scrollToSection('contact')">اتصل بنا</a>
+          </li>
+        </ul>
+      </div>
+      <div class="navbar-actions">
+        <ng-container *ngIf="!isAuthenticated; else authenticatedActions">
+          <button class="btn btn-outline-primary" (click)="login()">تسجيل الدخول</button>
+          <button class="btn btn-primary" (click)="register()">إنشاء حساب</button>
+        </ng-container>
+        <ng-template #authenticatedActions>
+          <button class="btn btn-primary" (click)="dashboard()">لوحة التحكم</button>
+        </ng-template>
+      </div>
+    </div>
+  </nav>
+
+  <!-- قسم الشرائح -->
+  <section class="hero-section">
+    <div class="hero-slider">
+      <div class="hero-slide" *ngFor="let slide of slides; let i = index" [ngClass]="{'active': i === currentSlide}">
+        <div class="slide-content">
+          <h1 class="slide-title">{{ slide.title }}</h1>
+          <p class="slide-description">{{ slide.description }}</p>
+          <button class="btn btn-primary btn-lg" (click)="scrollToSection(slide.buttonLink.substring(1))">
+            {{ slide.buttonText }}
+          </button>
+        </div>
+        <div class="slide-image" [style.backgroundImage]="'url(' + slide.image + ')'"></div>
+      </div>
+      <div class="slider-controls">
+        <button class="slider-arrow prev" (click)="prevSlide()" aria-label="الشريحة السابقة">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="slider-dots">
+          <button *ngFor="let slide of slides; let i = index" 
+                  class="slider-dot" 
+                  [ngClass]="{'active': i === currentSlide}"
+                  (click)="goToSlide(i)"
+                  [attr.aria-label]="'الشريحة ' + (i + 1)">
+          </button>
+        </div>
+        <button class="slider-arrow next" (click)="nextSlide()" aria-label="الشريحة التالية">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- قسم المميزات -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">مميزات المنصة</h2>
+        <p class="section-subtitle">اكتشف كيف يمكن لمنصة Adalalegalis تحسين إدارة مكتبك القانوني</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" *ngFor="let feature of features">
+          <div class="feature-icon">
+            <i class="fas" [ngClass]="feature.icon"></i>
+          </div>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-description">{{ feature.description }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- قسم الأسعار -->
+  <section id="pricing" class="pricing-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">خطط الأسعار</h2>
+        <p class="section-subtitle">اختر الخطة المناسبة لاحتياجاتك</p>
+      </div>
+      <div class="pricing-cards">
+        <div class="pricing-card" *ngFor="let plan of pricingPlans" [ngClass]="{'popular': plan.isPopular}">
+          <div class="pricing-header">
+            <h3 class="pricing-title">{{ plan.name }}</h3>
+            <div class="pricing-badge" *ngIf="plan.isPopular">الأكثر شيوعاً</div>
+          </div>
+          <div class="pricing-price">
+            <span class="currency">ر.س</span>
+            <span class="amount">{{ plan.price }}</span>
+            <span class="period">/ {{ plan.period }}</span>
+          </div>
+          <ul class="pricing-features">
+            <li *ngFor="let feature of plan.features">
+              <i class="fas fa-check"></i>
+              <span>{{ feature }}</span>
+            </li>
+          </ul>
+          <div class="pricing-action">
+            <button class="btn" [ngClass]="plan.isPopular ? 'btn-primary' : 'btn-outline-primary'">
+              {{ plan.buttonText }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- قسم الشهادات -->
+  <section id="testimonials" class="testimonials-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">آراء العملاء</h2>
+        <p class="section-subtitle">اطلع على تجارب عملائنا مع منصة Adalalegalis</p>
+      </div>
+      <div class="testimonials-slider">
+        <div class="testimonial-card" *ngFor="let testimonial of testimonials">
+          <div class="testimonial-content">
+            <div class="testimonial-quote">
+              <i class="fas fa-quote-right"></i>
+              <p>{{ testimonial.quote }}</p>
+            </div>
+            <div class="testimonial-author">
+              <img [src]="testimonial.image" [alt]="testimonial.author" class="author-image">
+              <div class="author-info">
+                <h4 class="author-name">{{ testimonial.author }}</h4>
+                <p class="author-position">{{ testimonial.position }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- قسم الأسئلة الشائعة -->
+  <section id="faq" class="faq-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">الأسئلة الشائعة</h2>
+        <p class="section-subtitle">إجابات على الأسئلة الأكثر شيوعاً</p>
+      </div>
+      <div class="faq-accordion">
+        <div class="faq-item" *ngFor="let faq of faqs; let i = index">
+          <div class="faq-question" (click)="toggleFaq(i)" [attr.aria-expanded]="faq.isOpen">
+            <h3>{{ faq.question }}</h3>
+            <i class="fas" [ngClass]="faq.isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          </div>
+          <div class="faq-answer" [ngClass]="{'open': faq.isOpen}">
+            <p>{{ faq.answer }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- قسم الاتصال -->
+  <section id="contact" class="contact-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">اتصل بنا</h2>
+        <p class="section-subtitle">نحن هنا للإجابة على استفساراتك</p>
+      </div>
+      <div class="contact-content">
+        <div class="contact-info">
+          <div class="contact-item">
+            <div class="contact-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="contact-text">
+              <h4>العنوان</h4>
+              <p>شارع الملك فهد، برج المملكة، الرياض، المملكة العربية السعودية</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <i class="fas fa-phone-alt"></i>
+            </div>
+            <div class="contact-text">
+              <h4>الهاتف</h4>
+              <p>+966 12 345 6789</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="contact-text">
+              <h4>البريد الإلكتروني</h4>
+              <p>info@adalalegalis.com</p>
+            </div>
+          </div>
+        </div>
+        <div class="contact-form">
+          <form>
+            <div class="form-group">
+              <label for="name">الاسم</label>
+              <input type="text" id="name" class="form-control" placeholder="أدخل اسمك">
+            </div>
+            <div class="form-group">
+              <label for="email">البريد الإلكتروني</label>
+              <input type="email" id="email" class="form-control" placeholder="أدخل بريدك الإلكتروني">
+            </div>
+            <div class="form-group">
+              <label for="subject">الموضوع</label>
+              <input type="text" id="subject" class="form-control" placeholder="أدخل موضوع الرسالة">
+            </div>
+            <div class="form-group">
+              <label for="message">الرسالة</label>
+              <textarea id="message" class="form-control" rows="5" placeholder="أدخل رسالتك"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">إرسال الرسالة</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- التذييل -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img src="assets/images/logo.svg" alt="Adalalegalis Logo" class="footer-logo">
+          <h3 class="footer-title">Adalalegalis</h3>
+          <p class="footer-description">منصة متكاملة لإدارة المكاتب القانونية</p>
+          <div class="footer-social">
+            <a href="#" class="social-link" aria-label="فيسبوك">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="تويتر">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="لينكد إن">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="انستغرام">
+              <i class="fab fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <div class="footer-links-column">
+            <h4 class="footer-links-title">روابط سريعة</h4>
+            <ul class="footer-links-list">
+              <li><a href="#features">المميزات</a></li>
+              <li><a href="#pricing">الأسعار</a></li>
+              <li><a href="#testimonials">آراء العملاء</a></li>
+              <li><a href="#faq">الأسئلة الشائعة</a></li>
+              <li><a href="#contact">اتصل بنا</a></li>
+            </ul>
+          </div>
+          <div class="footer-links-column">
+            <h4 class="footer-links-title">الخدمات</h4>
+            <ul class="footer-links-list">
+              <li><a href="#">إدارة القضايا</a></li>
+              <li><a href="#">إدارة العقود</a></li>
+              <li><a href="#">الاستشارات القانونية</a></li>
+              <li><a href="#">إدارة المهام</a></li>
+              <li><a href="#">التقارير والتحليلات</a></li>
+            </ul>
+          </div>
+          <div class="footer-links-column">
+            <h4 class="footer-links-title">الدعم</h4>
+            <ul class="footer-links-list">
+              <li><a href="#">مركز المساعدة</a></li>
+              <li><a href="#">الأسئلة الشائعة</a></li>
+              <li><a href="#">الدعم الفني</a></li>
+              <li><a href="#">سياسة الخصوصية</a></li>
+              <li><a href="#">شروط الاستخدام</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="copyright">© {{ currentYear }} Adalalegalis. جميع الحقوق محفوظة.</p>
+      </div>
+    </div>
+  </footer>
+</div>
