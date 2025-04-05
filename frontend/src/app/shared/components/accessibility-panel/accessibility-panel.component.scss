@@ -1,0 +1,268 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+.accessibility-panel {
+  background-color: var(--bg-color-secondary);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  direction: rtl;
+
+  // تحسينات للأجهزة المحمولة
+  @media (max-width: 768px) {
+    padding: 1rem;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: 100%;
+  }
+}
+
+.accessibility-panel-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-color-primary);
+  text-align: right;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.accessibility-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color-light);
+
+  // تحسينات للأجهزة المحمولة
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+.setting-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-weight: 500;
+    color: var(--text-color-primary);
+    font-size: 1rem;
+  }
+
+  small {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+.setting-control {
+  min-width: 100px;
+  text-align: left;
+
+  // تحسينات للأجهزة المحمولة
+  @media (max-width: 576px) {
+    width: 100%;
+    text-align: right;
+  }
+}
+
+.toggle-button {
+  background-color: var(--bg-color-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  text-align: center;
+
+  &:hover {
+    background-color: var(--bg-color-hover);
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  // تحسينات للأجهزة المحمولة
+  @media (max-width: 576px) {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+.font-select {
+  background-color: var(--bg-color-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  min-width: 150px;
+  cursor: pointer;
+
+  &:focus {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+    border-color: var(--primary-color);
+  }
+
+  // تحسينات للأجهزة المحمولة
+  @media (max-width: 576px) {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+.accessibility-actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+
+  // تحسينات للأجهزة المحمولة
+  @media (max-width: 576px) {
+    justify-content: center;
+  }
+}
+
+.reset-button {
+  background-color: var(--danger-color-light);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--danger-color);
+    color: white;
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+  }
+
+  // تحسينات للأجهزة المحمولة
+  @media (max-width: 576px) {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+// فئة للعناصر المخفية بصريًا ولكن متاحة لقارئات الشاشة
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// تحسينات لوضع التباين العالي
+:host-context(.high-contrast-mode) {
+  .accessibility-panel {
+    background-color: black;
+    border: 2px solid white;
+  }
+
+  .accessibility-panel-title {
+    color: white;
+    border-bottom-color: white;
+  }
+
+  .setting-label label {
+    color: white;
+  }
+
+  .setting-label small {
+    color: #ffff00;
+  }
+
+  .toggle-button {
+    background-color: black;
+    color: white;
+    border-color: white;
+
+    &.active {
+      background-color: #ffff00;
+      color: black;
+      border-color: #ffff00;
+    }
+  }
+
+  .font-select {
+    background-color: black;
+    color: white;
+    border-color: white;
+  }
+
+  .reset-button {
+    background-color: black;
+    color: #ff6666;
+    border-color: #ff6666;
+
+    &:hover {
+      background-color: #ff6666;
+      color: black;
+    }
+  }
+}
+
+// تحسينات لوضع النص الكبير
+:host-context(.large-text-mode) {
+  .accessibility-panel-title {
+    font-size: 2rem;
+  }
+
+  .setting-label label {
+    font-size: 1.25rem;
+  }
+
+  .setting-label small {
+    font-size: 1.1rem;
+  }
+
+  .toggle-button {
+    font-size: 1.1rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .font-select {
+    font-size: 1.1rem;
+    padding: 0.75rem;
+  }
+
+  .reset-button {
+    font-size: 1.1rem;
+    padding: 0.75rem 1.25rem;
+  }
+}

@@ -9,7 +9,7 @@ const config = {
     port: process.env.DB_PORT || 3306,
     database: process.env.DB_NAME || 'adalalegalis',
     username: process.env.DB_USER || 'adalalegalis',
-    password: process.env.DB_PASSWORD || 'your_secure_password',
+    password: process.env.DB_PASSWORD || 'admin@123',
     dialect: 'mysql',
     logging: console.log,
     pool: {

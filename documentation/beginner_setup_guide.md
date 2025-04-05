@@ -295,8 +295,8 @@ EXIT;
 // تأكد من تحديث هذه القيم وفقاً لإعدادك المحلي
 module.exports = {
   development: {
-    username: "adalalegalis_user",
-    password: "your_strong_password",
+    username: "adalalegalis",
+    password: "admin@123",
     database: "adalalegalis",
     host: "localhost",
     dialect: "mysql",

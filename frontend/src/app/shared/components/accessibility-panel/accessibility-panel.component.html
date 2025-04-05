@@ -1,0 +1,160 @@
+<div class="accessibility-panel" role="region" aria-labelledby="accessibility-panel-title">
+    <h2 id="accessibility-panel-title" class="accessibility-panel-title">إعدادات إمكانية الوصول</h2>
+    
+    <div class="accessibility-settings">
+      <!-- وضع التباين العالي -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="high-contrast-toggle" id="high-contrast-label">وضع التباين العالي</label>
+          <small>يحسن التباين بين النص والخلفية</small>
+        </div>
+        <div class="setting-control">
+          <button 
+            id="high-contrast-toggle"
+            type="button"
+            class="toggle-button"
+            [class.active]="accessibilitySettings?.highContrast"
+            (click)="toggleSetting('highContrast')"
+            aria-labelledby="high-contrast-label"
+            [attr.aria-pressed]="accessibilitySettings?.highContrast">
+            {{ accessibilitySettings?.highContrast ? 'مفعل' : 'معطل' }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- وضع النص الكبير -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="large-text-toggle" id="large-text-label">وضع النص الكبير</label>
+          <small>يزيد حجم النص لتحسين القراءة</small>
+        </div>
+        <div class="setting-control">
+          <button 
+            id="large-text-toggle"
+            type="button"
+            class="toggle-button"
+            [class.active]="accessibilitySettings?.largeText"
+            (click)="toggleSetting('largeText')"
+            aria-labelledby="large-text-label"
+            [attr.aria-pressed]="accessibilitySettings?.largeText">
+            {{ accessibilitySettings?.largeText ? 'مفعل' : 'معطل' }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- تقليل الحركة -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="reduced-motion-toggle" id="reduced-motion-label">تقليل الحركة</label>
+          <small>يقلل أو يزيل الرسوم المتحركة</small>
+        </div>
+        <div class="setting-control">
+          <button 
+            id="reduced-motion-toggle"
+            type="button"
+            class="toggle-button"
+            [class.active]="accessibilitySettings?.reducedMotion"
+            (click)="toggleSetting('reducedMotion')"
+            aria-labelledby="reduced-motion-label"
+            [attr.aria-pressed]="accessibilitySettings?.reducedMotion">
+            {{ accessibilitySettings?.reducedMotion ? 'مفعل' : 'معطل' }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- دعم قارئ الشاشة -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="screen-reader-toggle" id="screen-reader-label">دعم قارئ الشاشة</label>
+          <small>يحسن التوافق مع قارئات الشاشة</small>
+        </div>
+        <div class="setting-control">
+          <button 
+            id="screen-reader-toggle"
+            type="button"
+            class="toggle-button"
+            [class.active]="accessibilitySettings?.screenReader"
+            (click)="toggleSetting('screenReader')"
+            aria-labelledby="screen-reader-label"
+            [attr.aria-pressed]="accessibilitySettings?.screenReader">
+            {{ accessibilitySettings?.screenReader ? 'مفعل' : 'معطل' }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- التنقل بلوحة المفاتيح -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="keyboard-navigation-toggle" id="keyboard-navigation-label">التنقل بلوحة المفاتيح</label>
+          <small>يحسن التنقل باستخدام لوحة المفاتيح</small>
+        </div>
+        <div class="setting-control">
+          <button 
+            id="keyboard-navigation-toggle"
+            type="button"
+            class="toggle-button"
+            [class.active]="accessibilitySettings?.keyboardNavigation"
+            (click)="toggleSetting('keyboardNavigation')"
+            aria-labelledby="keyboard-navigation-label"
+            [attr.aria-pressed]="accessibilitySettings?.keyboardNavigation">
+            {{ accessibilitySettings?.keyboardNavigation ? 'مفعل' : 'معطل' }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- تحويل النص إلى كلام -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="text-to-speech-toggle" id="text-to-speech-label">تحويل النص إلى كلام</label>
+          <small>يقرأ النص بصوت عالٍ عند الطلب</small>
+        </div>
+        <div class="setting-control">
+          <button 
+            id="text-to-speech-toggle"
+            type="button"
+            class="toggle-button"
+            [class.active]="accessibilitySettings?.textToSpeech"
+            (click)="toggleSetting('textToSpeech')"
+            aria-labelledby="text-to-speech-label"
+            [attr.aria-pressed]="accessibilitySettings?.textToSpeech">
+            {{ accessibilitySettings?.textToSpeech ? 'مفعل' : 'معطل' }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- عائلة الخط -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <label for="font-family-select" id="font-family-label">عائلة الخط</label>
+          <small>يغير نوع الخط المستخدم في التطبيق</small>
+        </div>
+        <div class="setting-control">
+          <select 
+            id="font-family-select"
+            class="font-select"
+            [value]="accessibilitySettings?.fontFamily"
+            (change)="updateSetting('fontFamily', $event.target.value)"
+            aria-labelledby="font-family-label">
+            <option *ngFor="let option of fontFamilyOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="accessibility-actions">
+      <button 
+        type="button"
+        class="reset-button"
+        (click)="resetAllSettings()"
+        aria-label="إعادة تعيين جميع إعدادات إمكانية الوصول إلى القيم الافتراضية">
+        إعادة تعيين الإعدادات
+      </button>
+    </div>
+    
+    <!-- منطقة مخفية للإعلانات لقارئات الشاشة -->
+    <div id="accessibility-announce-polite" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    <div id="accessibility-announce-assertive" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+  </div>
+  

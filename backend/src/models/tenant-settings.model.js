@@ -53,6 +53,6 @@ TenantSettings.init({
 
 // Define association with Tenant
 TenantSettings.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
-Tenant.hasOne(TenantSettings, { foreignKey: 'tenant_id', as: 'settings' });
+Tenant.hasOne(TenantSettings, { foreignKey: 'tenant_id', as: 'tenantSettings' });
 
 module.exports = TenantSettings;

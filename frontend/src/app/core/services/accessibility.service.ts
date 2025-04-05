@@ -1,568 +1,268 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 /**
- * خدمة تحسين إمكانية الوصول
- * توفر وظائف وأدوات لتحسين إمكانية الوصول في التطبيق
+ * خدمة إمكانية الوصول
+ * توفر وظائف وإعدادات لتحسين إمكانية الوصول في التطبيق
  */
 @Injectable({
   providedIn: 'root'
 })
 export class AccessibilityService {
   // إعدادات إمكانية الوصول الافتراضية
-  private settings = {
+  private defaultSettings = {
     highContrast: false,
     largeText: false,
     reducedMotion: false,
     screenReader: false,
-    focusVisible: true
+    keyboardNavigation: true,
+    autoFocus: true,
+    textToSpeech: false,
+    fontFamily: 'default'
   };
 
+  // موضوع سلوكي لإعدادات إمكانية الوصول
+  private accessibilitySettingsSubject = new BehaviorSubject<any>(this.loadSettings());
+  
+  // ملاحظة قابلة للمراقبة للإعدادات
+  public accessibilitySettings$ = this.accessibilitySettingsSubject.asObservable();
+
   constructor() {
-    this.loadSettings();
-    this.applySettings();
-    this.setupEventListeners();
+    // تطبيق الإعدادات عند بدء التشغيل
+    this.applySettings(this.accessibilitySettingsSubject.value);
+    
+    // الاستماع لتغييرات وسائط prefers-reduced-motion
+    this.listenToMediaQueries();
+  }
+
+  /**
+   * تحديث إعدادات إمكانية الوصول
+   * @param settings الإعدادات المراد تحديثها
+   */
+  updateSettings(settings: Partial<typeof this.defaultSettings>): void {
+    const currentSettings = this.accessibilitySettingsSubject.value;
+    const newSettings = { ...currentSettings, ...settings };
+    
+    // حفظ الإعدادات الجديدة
+    this.saveSettings(newSettings);
+    
+    // تحديث الموضوع السلوكي
+    this.accessibilitySettingsSubject.next(newSettings);
+    
+    // تطبيق الإعدادات الجديدة
+    this.applySettings(newSettings);
   }
 
   /**
    * تحميل إعدادات إمكانية الوصول من التخزين المحلي
+   * @returns إعدادات إمكانية الوصول
    */
-  private loadSettings(): void {
+  private loadSettings(): typeof this.defaultSettings {
     try {
-      const savedSettings = localStorage.getItem('accessibility_settings');
-      if (savedSettings) {
-        this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
-      }
-      
-      // التحقق من تفضيلات النظام
-      this.checkSystemPreferences();
+      const savedSettings = localStorage.getItem('accessibilitySettings');
+      return savedSettings ? { ...this.defaultSettings, ...JSON.parse(savedSettings) } : this.defaultSettings;
     } catch (error) {
-      console.error('فشل في تحميل إعدادات إمكانية الوصول:', error);
+      console.error('فشل تحميل إعدادات إمكانية الوصول:', error);
+      return this.defaultSettings;
     }
   }
 
   /**
-   * التحقق من تفضيلات النظام لإمكانية الوصول
+   * حفظ إعدادات إمكانية الوصول في التخزين المحلي
+   * @param settings إعدادات إمكانية الوصول
    */
-  private checkSystemPreferences(): void {
-    // التحقق من تفضيل التباين العالي
-    const prefersContrast = window.matchMedia('(prefers-contrast: more)');
-    if (prefersContrast.matches) {
-      this.settings.highContrast = true;
-    }
-
-    // التحقق من تفضيل تقليل الحركة
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (prefersReducedMotion.matches) {
-      this.settings.reducedMotion = true;
+  private saveSettings(settings: typeof this.defaultSettings): void {
+    try {
+      localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
+    } catch (error) {
+      console.error('فشل حفظ إعدادات إمكانية الوصول:', error);
     }
   }
 
   /**
    * تطبيق إعدادات إمكانية الوصول على المستند
+   * @param settings إعدادات إمكانية الوصول
    */
-  private applySettings(): void {
+  private applySettings(settings: typeof this.defaultSettings): void {
     // تطبيق وضع التباين العالي
-    if (this.settings.highContrast) {
+    if (settings.highContrast) {
       document.body.classList.add('high-contrast-mode');
     } else {
       document.body.classList.remove('high-contrast-mode');
     }
-
+    
     // تطبيق وضع النص الكبير
-    if (this.settings.largeText) {
+    if (settings.largeText) {
       document.body.classList.add('large-text-mode');
     } else {
       document.body.classList.remove('large-text-mode');
     }
-
+    
     // تطبيق وضع تقليل الحركة
-    if (this.settings.reducedMotion) {
+    if (settings.reducedMotion) {
       document.body.classList.add('reduced-motion-mode');
     } else {
       document.body.classList.remove('reduced-motion-mode');
     }
-
-    // تطبيق وضع قارئ الشاشة
-    if (this.settings.screenReader) {
-      document.body.classList.add('screen-reader-mode');
+    
+    // تطبيق وضع التنقل بلوحة المفاتيح
+    if (settings.keyboardNavigation) {
+      document.body.classList.add('keyboard-navigation-mode');
     } else {
-      document.body.classList.remove('screen-reader-mode');
+      document.body.classList.remove('keyboard-navigation-mode');
     }
-
-    // تطبيق وضع التركيز المرئي
-    if (this.settings.focusVisible) {
-      document.body.classList.add('focus-visible-mode');
-    } else {
-      document.body.classList.remove('focus-visible-mode');
-    }
-  }
-
-  /**
-   * إعداد مستمعي الأحداث
-   */
-  private setupEventListeners(): void {
-    // مستمع لتغييرات تفضيل التباين
-    const contrastMediaQuery = window.matchMedia('(prefers-contrast: more)');
-    contrastMediaQuery.addEventListener('change', (e) => {
-      this.settings.highContrast = e.matches;
-      this.saveAndApplySettings();
-    });
-
-    // مستمع لتغييرات تفضيل تقليل الحركة
-    const motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    motionMediaQuery.addEventListener('change', (e) => {
-      this.settings.reducedMotion = e.matches;
-      this.saveAndApplySettings();
-    });
-
-    // إضافة مستمع لأحداث التركيز
-    document.addEventListener('focusin', this.handleFocusIn.bind(this));
-    document.addEventListener('keydown', this.handleKeyDown.bind(this));
-  }
-
-  /**
-   * معالجة حدث التركيز
-   * @param event حدث التركيز
-   */
-  private handleFocusIn(event: FocusEvent): void {
-    if (!this.settings.focusVisible) return;
     
-    const target = event.target as HTMLElement;
-    if (target) {
-      // إضافة فئة للعنصر المركز عليه
-      target.classList.add('focus-visible');
-      
-      // إزالة الفئة عند فقدان التركيز
-      const handleBlur = () => {
-        target.classList.remove('focus-visible');
-        target.removeEventListener('blur', handleBlur);
-      };
-      
-      target.addEventListener('blur', handleBlur);
+    // تطبيق عائلة الخط
+    document.body.style.setProperty('--accessibility-font-family', this.getFontFamily(settings.fontFamily));
+  }
+
+  /**
+   * الحصول على عائلة الخط المناسبة
+   * @param fontFamily اسم عائلة الخط
+   * @returns قيمة CSS لعائلة الخط
+   */
+  private getFontFamily(fontFamily: string): string {
+    switch (fontFamily) {
+      case 'dyslexic':
+        return '"OpenDyslexic", "Noto Sans Arabic", sans-serif';
+      case 'readable':
+        return '"Verdana", "Noto Sans Arabic", sans-serif';
+      case 'monospace':
+        return '"Courier New", "Noto Sans Arabic", monospace';
+      default:
+        return '"Noto Sans Arabic", "Arial", sans-serif';
     }
   }
 
   /**
-   * معالجة أحداث المفاتيح
-   * @param event حدث المفاتيح
+   * الاستماع لتغييرات وسائط CSS
    */
-  private handleKeyDown(event: KeyboardEvent): void {
-    // تنفيذ اختصارات لوحة المفاتيح لإمكانية الوصول
-    // Alt + A لفتح قائمة إمكانية الوصول
-    if (event.altKey && event.key === 'a') {
-      event.preventDefault();
-      this.toggleAccessibilityMenu();
-    }
+  private listenToMediaQueries(): void {
+    // الاستماع لتفضيل تقليل الحركة
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    const handleReducedMotionChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) {
+        this.updateSettings({ reducedMotion: true });
+      }
+    };
+    
+    // التحقق من الحالة الأولية
+    handleReducedMotionChange(reducedMotionQuery);
+    
+    // الاستماع للتغييرات
+    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+    
+    // الاستماع لتفضيل التباين العالي
+    const highContrastQuery = window.matchMedia('(prefers-contrast: more)');
+    
+    const handleHighContrastChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) {
+        this.updateSettings({ highContrast: true });
+      }
+    };
+    
+    // التحقق من الحالة الأولية
+    handleHighContrastChange(highContrastQuery);
+    
+    // الاستماع للتغييرات
+    highContrastQuery.addEventListener('change', handleHighContrastChange);
   }
 
   /**
-   * تبديل قائمة إمكانية الوصول
+   * إعلان رسالة لقارئات الشاشة
+   * @param message الرسالة المراد إعلانها
+   * @param priority أولوية الرسالة (polite أو assertive)
    */
-  private toggleAccessibilityMenu(): void {
-    // التحقق من وجود قائمة إمكانية الوصول
-    let accessibilityMenu = document.getElementById('accessibility-menu');
-    
-    if (accessibilityMenu) {
-      // إذا كانت القائمة موجودة، قم بتبديل حالة العرض
-      accessibilityMenu.style.display = accessibilityMenu.style.display === 'none' ? 'block' : 'none';
-    } else {
-      // إنشاء قائمة إمكانية الوصول
-      this.createAccessibilityMenu();
-    }
-  }
-
-  /**
-   * إنشاء قائمة إمكانية الوصول
-   */
-  private createAccessibilityMenu(): void {
-    const menu = document.createElement('div');
-    menu.id = 'accessibility-menu';
-    menu.className = 'accessibility-menu';
-    menu.setAttribute('role', 'dialog');
-    menu.setAttribute('aria-labelledby', 'accessibility-title');
-    
-    menu.innerHTML = `
-      <div class="accessibility-header">
-        <h2 id="accessibility-title">إعدادات إمكانية الوصول</h2>
-        <button class="close-button" aria-label="إغلاق">&times;</button>
-      </div>
-      <div class="accessibility-options">
-        <div class="option">
-          <label for="high-contrast">وضع التباين العالي</label>
-          <input type="checkbox" id="high-contrast" ${this.settings.highContrast ? 'checked' : ''}>
-        </div>
-        <div class="option">
-          <label for="large-text">وضع النص الكبير</label>
-          <input type="checkbox" id="large-text" ${this.settings.largeText ? 'checked' : ''}>
-        </div>
-        <div class="option">
-          <label for="reduced-motion">تقليل الحركة</label>
-          <input type="checkbox" id="reduced-motion" ${this.settings.reducedMotion ? 'checked' : ''}>
-        </div>
-        <div class="option">
-          <label for="screen-reader">وضع قارئ الشاشة</label>
-          <input type="checkbox" id="screen-reader" ${this.settings.screenReader ? 'checked' : ''}>
-        </div>
-        <div class="option">
-          <label for="focus-visible">إبراز التركيز</label>
-          <input type="checkbox" id="focus-visible" ${this.settings.focusVisible ? 'checked' : ''}>
-        </div>
-      </div>
-    `;
-    
-    // إضافة أنماط CSS
-    const style = document.createElement('style');
-    style.textContent = `
-      .accessibility-menu {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        z-index: 9999;
-        width: 350px;
-        max-width: 90vw;
-        direction: rtl;
-      }
-      
-      .accessibility-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px;
-        border-bottom: 1px solid #eee;
-      }
-      
-      .accessibility-header h2 {
-        margin: 0;
-        font-size: 18px;
-      }
-      
-      .close-button {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        color: #666;
-      }
-      
-      .accessibility-options {
-        padding: 16px;
-      }
-      
-      .option {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-      }
-      
-      .option label {
-        font-size: 16px;
-        color: #333;
-      }
-      
-      .option input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-      }
-      
-      /* أنماط وضع التباين العالي */
-      .high-contrast-mode {
-        filter: contrast(1.5);
-      }
-      
-      /* أنماط وضع النص الكبير */
-      .large-text-mode {
-        font-size: 120% !important;
-      }
-      
-      /* أنماط وضع تقليل الحركة */
-      .reduced-motion-mode * {
-        animation-duration: 0.001s !important;
-        transition-duration: 0.001s !important;
-      }
-      
-      /* أنماط وضع قارئ الشاشة */
-      .screen-reader-mode .sr-only {
-        position: static !important;
-        width: auto !important;
-        height: auto !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: visible !important;
-        clip: auto !important;
-        white-space: normal !important;
-        border: 1px solid #333 !important;
-        background-color: #f5f5f5 !important;
-        color: #333 !important;
-        display: block !important;
-        padding: 8px !important;
-        margin-bottom: 8px !important;
-      }
-      
-      /* أنماط وضع إبراز التركيز */
-      .focus-visible-mode :focus {
-        outline: 3px solid #3f51b5 !important;
-        outline-offset: 2px !important;
-      }
-      
-      .focus-visible {
-        outline: 3px solid #3f51b5 !important;
-        outline-offset: 2px !important;
-      }
-    `;
-    
-    document.head.appendChild(style);
-    document.body.appendChild(menu);
-    
-    // إضافة مستمعي الأحداث
-    const closeButton = menu.querySelector('.close-button');
-    closeButton.addEventListener('click', () => {
-      menu.style.display = 'none';
-    });
-    
-    // مستمعي أحداث خيارات إمكانية الوصول
-    const highContrastCheckbox = document.getElementById('high-contrast') as HTMLInputElement;
-    highContrastCheckbox.addEventListener('change', () => {
-      this.toggleHighContrast(highContrastCheckbox.checked);
-    });
-    
-    const largeTextCheckbox = document.getElementById('large-text') as HTMLInputElement;
-    largeTextCheckbox.addEventListener('change', () => {
-      this.toggleLargeText(largeTextCheckbox.checked);
-    });
-    
-    const reducedMotionCheckbox = document.getElementById('reduced-motion') as HTMLInputElement;
-    reducedMotionCheckbox.addEventListener('change', () => {
-      this.toggleReducedMotion(reducedMotionCheckbox.checked);
-    });
-    
-    const screenReaderCheckbox = document.getElementById('screen-reader') as HTMLInputElement;
-    screenReaderCheckbox.addEventListener('change', () => {
-      this.toggleScreenReader(screenReaderCheckbox.checked);
-    });
-    
-    const focusVisibleCheckbox = document.getElementById('focus-visible') as HTMLInputElement;
-    focusVisibleCheckbox.addEventListener('change', () => {
-      this.toggleFocusVisible(focusVisibleCheckbox.checked);
-    });
-  }
-
-  /**
-   * تبديل وضع التباين العالي
-   * @param enabled تمكين أو تعطيل
-   */
-  public toggleHighContrast(enabled: boolean): void {
-    this.settings.highContrast = enabled;
-    this.saveAndApplySettings();
-  }
-
-  /**
-   * تبديل وضع النص الكبير
-   * @param enabled تمكين أو تعطيل
-   */
-  public toggleLargeText(enabled: boolean): void {
-    this.settings.largeText = enabled;
-    this.saveAndApplySettings();
-  }
-
-  /**
-   * تبديل وضع تقليل الحركة
-   * @param enabled تمكين أو تعطيل
-   */
-  public toggleReducedMotion(enabled: boolean): void {
-    this.settings.reducedMotion = enabled;
-    this.saveAndApplySettings();
-  }
-
-  /**
-   * تبديل وضع قارئ الشاشة
-   * @param enabled تمكين أو تعطيل
-   */
-  public toggleScreenReader(enabled: boolean): void {
-    this.settings.screenReader = enabled;
-    this.saveAndApplySettings();
-  }
-
-  /**
-   * تبديل وضع إبراز التركيز
-   * @param enabled تمكين أو تعطيل
-   */
-  public toggleFocusVisible(enabled: boolean): void {
-    this.settings.focusVisible = enabled;
-    this.saveAndApplySettings();
-  }
-
-  /**
-   * حفظ وتطبيق الإعدادات
-   */
-  private saveAndApplySettings(): void {
-    try {
-      localStorage.setItem('accessibility_settings', JSON.stringify(this.settings));
-      this.applySettings();
-    } catch (error) {
-      console.error('فشل في حفظ إعدادات إمكانية الوصول:', error);
-    }
-  }
-
-  /**
-   * إضافة نص للقراءة الشاشية فقط
-   * @param element العنصر المراد إضافة النص إليه
-   * @param text النص للقراءة الشاشية
-   */
-  public addScreenReaderText(element: HTMLElement, text: string): void {
-    const srElement = document.createElement('span');
-    srElement.className = 'sr-only';
-    srElement.textContent = text;
-    element.appendChild(srElement);
-  }
-
-  /**
-   * تحسين إمكانية الوصول للجداول
-   * @param tableElement عنصر الجدول
-   * @param caption وصف الجدول
-   * @param summary ملخص الجدول
-   */
-  public enhanceTableAccessibility(tableElement: HTMLTableElement, caption: string, summary?: string): void {
-    // إضافة وصف للجدول
-    let captionElement = tableElement.querySelector('caption');
-    if (!captionElement) {
-      captionElement = document.createElement('caption');
-      tableElement.prepend(captionElement);
-    }
-    captionElement.textContent = caption;
-    
-    // إضافة ملخص للجدول
-    if (summary) {
-      tableElement.setAttribute('summary', summary);
-    }
-    
-    // التأكد من وجود رؤوس للجدول
-    const headerRow = tableElement.querySelector('thead tr');
-    if (headerRow) {
-      const headerCells = headerRow.querySelectorAll('th');
-      headerCells.forEach((cell, index) => {
-        cell.setAttribute('scope', 'col');
-        cell.setAttribute('id', `col-${index}`);
-      });
-      
-      // ربط خلايا الجدول برؤوسها
-      const bodyRows = tableElement.querySelectorAll('tbody tr');
-      bodyRows.forEach((row, rowIndex) => {
-        const cells = row.querySelectorAll('td');
-        cells.forEach((cell, colIndex) => {
-          cell.setAttribute('headers', `col-${colIndex}`);
-        });
-      });
-    }
-  }
-
-  /**
-   * تحسين إمكانية الوصول للنماذج
-   * @param formElement عنصر النموذج
-   */
-  public enhanceFormAccessibility(formElement: HTMLFormElement): void {
-    // التأكد من وجود تسميات لجميع حقول الإدخال
-    const inputs = formElement.querySelectorAll('input, select, textarea');
-    inputs.forEach((input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, index) => {
-      // التحقق من وجود تسمية مرتبطة
-      const inputId = input.id || `input-${index}`;
-      input.id = inputId;
-      
-      let label = document.querySelector(`label[for="${inputId}"]`);
-      if (!label) {
-        // البحث عن تسمية محتملة في العنصر الأب
-        const parentLabel = input.closest('label');
-        if (!parentLabel) {
-          // إنشاء تسمية جديدة
-          label = document.createElement('label');
-          label.setAttribute('for', inputId);
-          label.textContent = input.placeholder || `حقل ${index + 1}`;
-          input.parentNode.insertBefore(label, input);
-        }
-      }
-      
-      // إضافة سمات ARIA
-      if (input.required) {
-        input.setAttribute('aria-required', 'true');
-      }
-      
-      if (input.getAttribute('aria-describedby') === null && input.getAttribute('aria-labelledby') === null) {
-        // البحث عن نص المساعدة
-        const helpText = input.parentElement.querySelector('.help-text, .hint, .description');
-        if (helpText) {
-          const helpId = helpText.id || `help-${inputId}`;
-          helpText.id = helpId;
-          input.setAttribute('aria-describedby', helpId);
-        }
-      }
-    });
-    
-    // تحسين رسائل الخطأ
-    const errorMessages = formElement.querySelectorAll('.error-message, .invalid-feedback');
-    errorMessages.forEach((errorMessage, index) => {
-      const errorId = errorMessage.id || `error-${index}`;
-      errorMessage.id = errorId;
-      errorMessage.setAttribute('role', 'alert');
-      errorMessage.setAttribute('aria-live', 'assertive');
-      
-      // البحث عن حقل الإدخال المرتبط
-      const input = errorMessage.parentElement.querySelector('input, select, textarea');
-      if (input) {
-        input.setAttribute('aria-invalid', 'true');
-        input.setAttribute('aria-errormessage', errorId);
-      }
-    });
-  }
-
-  /**
-   * إضافة زر تخطي التنقل
-   * @param targetId معرف العنصر المستهدف
-   */
-  public addSkipNavigationLink(targetId: string): void {
-    // التحقق من وجود زر تخطي التنقل
-    if (document.getElementById('skip-navigation')) {
+  announceForScreenReader(message: string, priority: 'polite' | 'assertive' = 'polite'): void {
+    // التحقق من تمكين قارئ الشاشة
+    if (!this.accessibilitySettingsSubject.value.screenReader) {
       return;
     }
     
-    const skipLink = document.createElement('a');
-    skipLink.id = 'skip-navigation';
-    skipLink.href = `#${targetId}`;
-    skipLink.textContent = 'تخطي إلى المحتوى الرئيسي';
-    skipLink.className = 'skip-navigation';
+    // إنشاء عنصر live region إذا لم يكن موجودًا
+    let liveRegion = document.getElementById(`accessibility-announce-${priority}`);
     
-    // إضافة أنماط CSS
-    const style = document.createElement('style');
-    style.textContent = `
-      .skip-navigation {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        background-color: #3f51b5;
-        color: white;
-        padding: 8px 16px;
-        z-index: 9999;
-        text-decoration: none;
-        transition: top 0.3s;
-      }
-      
-      .skip-navigation:focus {
-        top: 0;
-      }
-    `;
+    if (!liveRegion) {
+      liveRegion = document.createElement('div');
+      liveRegion.id = `accessibility-announce-${priority}`;
+      liveRegion.setAttribute('aria-live', priority);
+      liveRegion.setAttribute('aria-atomic', 'true');
+      liveRegion.classList.add('sr-only'); // إخفاء العنصر بصريًا
+      document.body.appendChild(liveRegion);
+    }
     
-    document.head.appendChild(style);
-    document.body.prepend(skipLink);
+    // تحديث محتوى العنصر لإعلان الرسالة
+    liveRegion.textContent = '';
+    setTimeout(() => {
+      liveRegion.textContent = message;
+    }, 100);
   }
 
   /**
-   * الحصول على إعدادات إمكانية الوصول الحالية
-   * @returns إعدادات إمكانية الوصول
+   * تحويل النص إلى كلام
+   * @param text النص المراد تحويله إلى كلام
+   * @param options خيارات النطق
    */
-  public getSettings(): any {
-    return { ...this.settings };
+  speak(text: string, options: SpeechSynthesisUtterance = new SpeechSynthesisUtterance()): void {
+    // التحقق من تمكين تحويل النص إلى كلام
+    if (!this.accessibilitySettingsSubject.value.textToSpeech) {
+      return;
+    }
+    
+    // التحقق من دعم تحويل النص إلى كلام
+    if (!('speechSynthesis' in window)) {
+      console.warn('تحويل النص إلى كلام غير مدعوم في هذا المتصفح');
+      return;
+    }
+    
+    // إيقاف أي كلام حالي
+    window.speechSynthesis.cancel();
+    
+    // تعيين النص
+    options.text = text;
+    
+    // تعيين اللغة إذا لم يتم تعيينها
+    if (!options.lang) {
+      options.lang = document.documentElement.lang || 'ar-SA';
+    }
+    
+    // نطق النص
+    window.speechSynthesis.speak(options);
+  }
+
+  /**
+   * التركيز على عنصر مع إعلان اختياري
+   * @param element العنصر المراد التركيز عليه
+   * @param announcement إعلان اختياري لقارئات الشاشة
+   */
+  focusElement(element: HTMLElement, announcement?: string): void {
+    if (element) {
+      // التركيز على العنصر
+      element.focus();
+      
+      // إعلان للقارئات إذا تم توفير إعلان
+      if (announcement) {
+        this.announceForScreenReader(announcement);
+      }
+    }
+  }
+
+  /**
+   * إضافة مؤشر تركيز مرئي إلى العنصر
+   * @param element العنصر المراد إضافة مؤشر التركيز إليه
+   */
+  addFocusIndicator(element: HTMLElement): void {
+    if (element) {
+      element.classList.add('focus-visible');
+      
+      // إزالة الفئة عند فقدان التركيز
+      const onBlur = () => {
+        element.classList.remove('focus-visible');
+        element.removeEventListener('blur', onBlur);
+      };
+      
+      element.addEventListener('blur', onBlur);
+    }
   }
 }
