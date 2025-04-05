@@ -1,0 +1,105 @@
+<div class="versions-container">
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" matTooltip="{{ 'COMMON.BACK' | translate }}">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ 'DOCUMENTS.VERSIONS_TITLE' | translate }}</h1>
+  </div>
+
+  <div class="document-info">
+    <mat-icon>insert_drive_file</mat-icon>
+    <span class="document-title">{{ documentTitle }}</span>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="loadVersions()">
+      {{ 'COMMON.TRY_AGAIN' | translate }}
+    </button>
+  </div>
+
+  <div class="versions-content" *ngIf="!isLoading && !error">
+    <mat-card>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="versions" class="versions-table">
+            <!-- Version Number Column -->
+            <ng-container matColumnDef="versionNumber">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.VERSION_NUMBER' | translate }}</th>
+              <td mat-cell *matCellDef="let version">
+                <span class="version-badge" [class.latest-version]="version.versionNumber === versions[0]?.versionNumber">
+                  {{ version.versionNumber }}
+                  <mat-icon *ngIf="version.versionNumber === versions[0]?.versionNumber" class="latest-icon">star</mat-icon>
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Upload Date Column -->
+            <ng-container matColumnDef="uploadDate">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.UPLOAD_DATE' | translate }}</th>
+              <td mat-cell *matCellDef="let version">{{ version.uploadDate | date:'medium' }}</td>
+            </ng-container>
+
+            <!-- Created By Column -->
+            <ng-container matColumnDef="createdBy">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.CREATED_BY' | translate }}</th>
+              <td mat-cell *matCellDef="let version">{{ version.createdBy }}</td>
+            </ng-container>
+
+            <!-- File Size Column -->
+            <ng-container matColumnDef="fileSize">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.FILE_SIZE' | translate }}</th>
+              <td mat-cell *matCellDef="let version">{{ version.fileSize | number }} bytes</td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.ACTIONS' | translate }}</th>
+              <td mat-cell *matCellDef="let version">
+                <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Version actions">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="viewVersion(version)">
+                    <mat-icon>visibility</mat-icon>
+                    <span>{{ 'COMMON.VIEW' | translate }}</span>
+                  </button>
+                  <button mat-menu-item (click)="downloadVersion(version, $event)">
+                    <mat-icon>download</mat-icon>
+                    <span>{{ 'COMMON.DOWNLOAD' | translate }}</span>
+                  </button>
+                  <button mat-menu-item (click)="restoreVersion(version, $event)" *ngIf="version.versionNumber !== versions[0]?.versionNumber">
+                    <mat-icon>restore</mat-icon>
+                    <span>{{ 'DOCUMENTS.RESTORE_VERSION' | translate }}</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="version-row"></tr>
+
+            <!-- Row shown when there is no matching data. -->
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell no-data-cell" colspan="5">
+                {{ 'DOCUMENTS.NO_VERSIONS' | translate }}
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="versions-info" *ngIf="versions.length > 0">
+          <p class="info-text">
+            <mat-icon>info</mat-icon>
+            {{ 'DOCUMENTS.VERSIONS_INFO' | translate }}
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

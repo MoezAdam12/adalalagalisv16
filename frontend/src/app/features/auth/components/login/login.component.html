@@ -1,0 +1,165 @@
+<div class="login-container" dir="rtl">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="assets/images/logo.svg" alt="Adalalegalis Logo" class="login-logo">
+      <h1 class="login-title">تسجيل الدخول</h1>
+    </div>
+
+    <!-- نموذج تسجيل الدخول -->
+    <form *ngIf="!requiresTwoFactor" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="tenantAccountNumber" class="form-label">رقم حساب المستأجر</label>
+        <div class="input-container">
+          <i class="fas fa-building input-icon"></i>
+          <input
+            type="text"
+            id="tenantAccountNumber"
+            formControlName="tenantAccountNumber"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f.tenantAccountNumber.errors }"
+            placeholder="أدخل رقم حساب المستأجر"
+            aria-required="true"
+            inputmode="numeric"
+            pattern="[0-9]*"
+          />
+        </div>
+        <div *ngIf="submitted && f.tenantAccountNumber.errors" class="invalid-feedback">
+          <div *ngIf="f.tenantAccountNumber.errors.required">رقم حساب المستأجر مطلوب</div>
+          <div *ngIf="f.tenantAccountNumber.errors.pattern">يرجى إدخال رقم حساب صالح (6 أرقام)</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">البريد الإلكتروني</label>
+        <div class="input-container">
+          <i class="fas fa-envelope input-icon"></i>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f.email.errors }"
+            placeholder="أدخل بريدك الإلكتروني"
+            aria-required="true"
+          />
+        </div>
+        <div *ngIf="submitted && f.email.errors" class="invalid-feedback">
+          <div *ngIf="f.email.errors.required">البريد الإلكتروني مطلوب</div>
+          <div *ngIf="f.email.errors.email">يرجى إدخال بريد إلكتروني صالح</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">كلمة المرور</label>
+        <div class="input-container">
+          <i class="fas fa-lock input-icon"></i>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f.password.errors }"
+            placeholder="أدخل كلمة المرور"
+            aria-required="true"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            aria-label="إظهار/إخفاء كلمة المرور"
+          >
+            <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
+          <div *ngIf="f.password.errors.required">كلمة المرور مطلوبة</div>
+          <div *ngIf="f.password.errors.minlength">كلمة المرور يجب أن تكون على الأقل 8 أحرف</div>
+        </div>
+      </div>
+
+      <div class="form-group form-check">
+        <input
+          type="checkbox"
+          id="rememberMe"
+          formControlName="rememberMe"
+          class="form-check-input"
+        />
+        <label for="rememberMe" class="form-check-label">تذكرني</label>
+      </div>
+
+      <div class="form-group">
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          [disabled]="loading"
+          aria-label="تسجيل الدخول"
+        >
+          <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+          تسجيل الدخول
+        </button>
+      </div>
+
+      <div class="form-links">
+        <a href="javascript:void(0)" (click)="forgotPassword()" class="forgot-password">
+          نسيت كلمة المرور؟
+        </a>
+        <span class="divider">|</span>
+        <a href="javascript:void(0)" (click)="register()" class="register">
+          إنشاء حساب جديد
+        </a>
+      </div>
+    </form>
+
+    <!-- نموذج المصادقة الثنائية -->
+    <form *ngIf="requiresTwoFactor" [formGroup]="twoFactorForm" (ngSubmit)="onSubmitTwoFactor()" class="login-form two-factor-form">
+      <div class="form-group">
+        <label for="code" class="form-label">رمز المصادقة الثنائية</label>
+        <div class="input-container">
+          <i class="fas fa-shield-alt input-icon"></i>
+          <input
+            type="text"
+            id="code"
+            formControlName="code"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && tf.code.errors }"
+            placeholder="أدخل رمز المصادقة المكون من 6 أرقام"
+            aria-required="true"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="6"
+          />
+        </div>
+        <div *ngIf="submitted && tf.code.errors" class="invalid-feedback">
+          <div *ngIf="tf.code.errors.required">رمز المصادقة مطلوب</div>
+          <div *ngIf="tf.code.errors.pattern">يجب أن يتكون الرمز من 6 أرقام</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          [disabled]="loading"
+          aria-label="تحقق من الرمز"
+        >
+          <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+          تحقق من الرمز
+        </button>
+      </div>
+
+      <div class="two-factor-info">
+        <p>
+          افتح تطبيق المصادقة على جهازك المحمول للحصول على رمز التحقق.
+        </p>
+        <p>
+          إذا لم تتمكن من الوصول إلى تطبيق المصادقة، يمكنك استخدام أحد رموز الاسترداد التي تم توفيرها لك عند إعداد المصادقة الثنائية.
+        </p>
+      </div>
+    </form>
+  </div>
+
+  <div class="login-footer">
+    <p>© {{ currentYear }} Adalalegalis. جميع الحقوق محفوظة.</p>
+  </div>
+</div>

@@ -1,0 +1,151 @@
+<div class="categories-container">
+  <div class="header-section">
+    <h1 class="page-title">{{ 'DOCUMENTS.CATEGORIES_TITLE' | translate }}</h1>
+    <button mat-raised-button color="primary" (click)="toggleCreateForm()" *ngIf="!isCreating">
+      <mat-icon>add</mat-icon>
+      {{ 'DOCUMENTS.CREATE_CATEGORY' | translate }}
+    </button>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="loadCategories()">
+      {{ 'COMMON.TRY_AGAIN' | translate }}
+    </button>
+  </div>
+
+  <!-- Create/Edit Category Form -->
+  <mat-card *ngIf="isCreating || isEditing" class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        {{ isCreating ? ('DOCUMENTS.CREATE_CATEGORY' | translate) : ('DOCUMENTS.EDIT_CATEGORY' | translate) }}
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="categoryForm" (ngSubmit)="isCreating ? createCategory() : updateCategory()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.CATEGORY_NAME' | translate }}</mat-label>
+          <input matInput formControlName="name" required>
+          <mat-error *ngIf="categoryForm.get('name')?.hasError('required')">
+            {{ 'DOCUMENTS.CATEGORY_NAME_REQUIRED' | translate }}
+          </mat-error>
+          <mat-error *ngIf="categoryForm.get('name')?.hasError('maxlength')">
+            {{ 'DOCUMENTS.CATEGORY_NAME_TOO_LONG' | translate }}
+          </mat-error>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.CATEGORY_DESCRIPTION' | translate }}</mat-label>
+          <textarea matInput formControlName="description" rows="3"></textarea>
+          <mat-error *ngIf="categoryForm.get('description')?.hasError('maxlength')">
+            {{ 'DOCUMENTS.CATEGORY_DESCRIPTION_TOO_LONG' | translate }}
+          </mat-error>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'DOCUMENTS.PARENT_CATEGORY' | translate }}</mat-label>
+          <mat-select formControlName="parentCategoryId">
+            <mat-option [value]="">{{ 'DOCUMENTS.NO_PARENT_CATEGORY' | translate }}</mat-option>
+            <mat-option *ngFor="let category of categories" [value]="category.id">
+              {{ category.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <div class="form-actions">
+          <button type="button" mat-button (click)="isCreating ? toggleCreateForm() : cancelEdit()">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+          <button type="submit" mat-raised-button color="primary" [disabled]="categoryForm.invalid">
+            {{ isCreating ? ('COMMON.CREATE' | translate) : ('COMMON.SAVE' | translate) }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Categories List -->
+  <div class="categories-content" *ngIf="!isLoading && !error">
+    <mat-card>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="categories" class="categories-table">
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.CATEGORY_NAME' | translate }}</th>
+              <td mat-cell *matCellDef="let category">{{ category.name }}</td>
+            </ng-container>
+
+            <!-- Description Column -->
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.CATEGORY_DESCRIPTION' | translate }}</th>
+              <td mat-cell *matCellDef="let category">
+                {{ category.description || ('DOCUMENTS.NO_DESCRIPTION' | translate) }}
+              </td>
+            </ng-container>
+
+            <!-- Document Count Column -->
+            <ng-container matColumnDef="documentCount">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.DOCUMENT_COUNT' | translate }}</th>
+              <td mat-cell *matCellDef="let category">
+                <span class="count-badge">{{ category.documentCount || 0 }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Created Date Column -->
+            <ng-container matColumnDef="createdDate">
+              <th mat-header-cell *matHeaderCellDef>{{ 'DOCUMENTS.CREATED_DATE' | translate }}</th>
+              <td mat-cell *matCellDef="let category">{{ category.createdDate | date:'mediumDate' }}</td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.ACTIONS' | translate }}</th>
+              <td mat-cell *matCellDef="let category">
+                <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Category actions">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="viewCategoryDocuments(category)">
+                    <mat-icon>folder_open</mat-icon>
+                    <span>{{ 'DOCUMENTS.VIEW_DOCUMENTS' | translate }}</span>
+                  </button>
+                  <button mat-menu-item (click)="editCategory(category)">
+                    <mat-icon>edit</mat-icon>
+                    <span>{{ 'COMMON.EDIT' | translate }}</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteCategory(category)">
+                    <mat-icon>delete</mat-icon>
+                    <span>{{ 'COMMON.DELETE' | translate }}</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="category-row"></tr>
+
+            <!-- Row shown when there is no matching data. -->
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell no-data-cell" colspan="5">
+                {{ 'DOCUMENTS.NO_CATEGORIES' | translate }}
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="categories-info" *ngIf="categories.length > 0">
+          <p class="info-text">
+            <mat-icon>info</mat-icon>
+            {{ 'DOCUMENTS.CATEGORIES_INFO' | translate }}
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,208 @@
+<div class="create-consultation-container">
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" matTooltip="{{ 'COMMON.BACK' | translate }}">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ 'CONSULTATIONS.CREATE_CONSULTATION' | translate }}</h1>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+  </div>
+
+  <div class="form-container" *ngIf="!isLoading">
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()">
+          <div class="form-section">
+            <h2 class="section-title">{{ 'CONSULTATIONS.BASIC_INFO' | translate }}</h2>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'CONSULTATIONS.TITLE' | translate }}</mat-label>
+              <input matInput formControlName="title" required>
+              <mat-error *ngIf="consultationForm.get('title')?.hasError('required')">
+                {{ 'CONSULTATIONS.TITLE_REQUIRED' | translate }}
+              </mat-error>
+              <mat-error *ngIf="consultationForm.get('title')?.hasError('maxlength')">
+                {{ 'CONSULTATIONS.TITLE_TOO_LONG' | translate }}
+              </mat-error>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'CONSULTATIONS.DESCRIPTION' | translate }}</mat-label>
+              <textarea matInput formControlName="description" rows="4"></textarea>
+              <mat-error *ngIf="consultationForm.get('description')?.hasError('maxlength')">
+                {{ 'CONSULTATIONS.DESCRIPTION_TOO_LONG' | translate }}
+              </mat-error>
+            </mat-form-field>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.CLIENT' | translate }}</mat-label>
+                <mat-select formControlName="clientId" required>
+                  <mat-option *ngFor="let client of clients" [value]="client.id">
+                    {{ client.name }} ({{ client.contactPerson }})
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="consultationForm.get('clientId')?.hasError('required')">
+                  {{ 'CONSULTATIONS.CLIENT_REQUIRED' | translate }}
+                </mat-error>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.ATTORNEY' | translate }}</mat-label>
+                <mat-select formControlName="attorneyId">
+                  <mat-option value="">{{ 'CONSULTATIONS.UNASSIGNED' | translate }}</mat-option>
+                  <mat-option *ngFor="let attorney of attorneys" [value]="attorney.id">
+                    {{ attorney.name }} - {{ attorney.specialization }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.TYPE' | translate }}</mat-label>
+                <mat-select formControlName="type" required>
+                  <mat-option *ngFor="let type of consultationTypes" [value]="type">
+                    {{ 'CONSULTATIONS.TYPE.' + type.toUpperCase() | translate }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.PRIORITY' | translate }}</mat-label>
+                <mat-select formControlName="priority" required>
+                  <mat-option *ngFor="let priority of consultationPriorities" [value]="priority">
+                    {{ 'CONSULTATIONS.PRIORITY.' + priority.toUpperCase() | translate }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+          
+          <div class="form-section">
+            <h2 class="section-title">{{ 'CONSULTATIONS.SCHEDULING' | translate }}</h2>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.SCHEDULED_DATE' | translate }}</mat-label>
+                <input matInput [matDatepicker]="scheduledDatePicker" formControlName="scheduledDate" required>
+                <mat-datepicker-toggle matSuffix [for]="scheduledDatePicker"></mat-datepicker-toggle>
+                <mat-datepicker #scheduledDatePicker></mat-datepicker>
+                <mat-error *ngIf="consultationForm.get('scheduledDate')?.hasError('required')">
+                  {{ 'CONSULTATIONS.DATE_REQUIRED' | translate }}
+                </mat-error>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.DURATION' | translate }}</mat-label>
+                <input matInput type="number" formControlName="duration" required>
+                <span matSuffix>{{ 'CONSULTATIONS.MINUTES' | translate }}</span>
+                <mat-error *ngIf="consultationForm.get('duration')?.hasError('required')">
+                  {{ 'CONSULTATIONS.DURATION_REQUIRED' | translate }}
+                </mat-error>
+                <mat-error *ngIf="consultationForm.get('duration')?.hasError('min')">
+                  {{ 'CONSULTATIONS.DURATION_MIN_ERROR' | translate }}
+                </mat-error>
+                <mat-error *ngIf="consultationForm.get('duration')?.hasError('max')">
+                  {{ 'CONSULTATIONS.DURATION_MAX_ERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          
+          <div class="form-section">
+            <h2 class="section-title">{{ 'CONSULTATIONS.CONSULTATION_MODE' | translate }}</h2>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.MODE' | translate }}</mat-label>
+                <mat-select formControlName="mode" required (selectionChange)="updateLocationFields()">
+                  <mat-option *ngFor="let mode of consultationModes" [value]="mode">
+                    {{ 'CONSULTATIONS.MODE.' + mode.toUpperCase() | translate }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            
+            <div class="form-row" *ngIf="consultationForm.get('mode')?.value === 'in_person'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'CONSULTATIONS.LOCATION' | translate }}</mat-label>
+                <input matInput formControlName="location">
+              </mat-form-field>
+            </div>
+            
+            <div class="form-row" *ngIf="consultationForm.get('mode')?.value === 'video'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'CONSULTATIONS.MEETING_LINK' | translate }}</mat-label>
+                <input matInput formControlName="meetingLink">
+              </mat-form-field>
+            </div>
+            
+            <div class="form-row" *ngIf="consultationForm.get('mode')?.value === 'phone'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'CONSULTATIONS.PHONE_NUMBER' | translate }}</mat-label>
+                <input matInput formControlName="phoneNumber">
+              </mat-form-field>
+            </div>
+          </div>
+          
+          <div class="form-section">
+            <h2 class="section-title">{{ 'CONSULTATIONS.BILLING' | translate }}</h2>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.FEE' | translate }}</mat-label>
+                <input matInput type="number" formControlName="fee">
+                <mat-error *ngIf="consultationForm.get('fee')?.hasError('min')">
+                  {{ 'CONSULTATIONS.FEE_MIN_ERROR' | translate }}
+                </mat-error>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'CONSULTATIONS.CURRENCY' | translate }}</mat-label>
+                <input matInput formControlName="currency">
+              </mat-form-field>
+            </div>
+          </div>
+          
+          <div class="form-section">
+            <h2 class="section-title">{{ 'CONSULTATIONS.ADDITIONAL_INFO' | translate }}</h2>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'CONSULTATIONS.NOTES' | translate }}</mat-label>
+              <textarea matInput formControlName="notes" rows="3"></textarea>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'CONSULTATIONS.TAGS' | translate }}</mat-label>
+              <input matInput formControlName="tags" placeholder="{{ 'CONSULTATIONS.TAGS_PLACEHOLDER' | translate }}">
+              <mat-hint>{{ 'CONSULTATIONS.TAGS_HINT' | translate }}</mat-hint>
+            </mat-form-field>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" mat-button (click)="resetForm()">
+              {{ 'COMMON.RESET' | translate }}
+            </button>
+            <button type="submit" mat-raised-button color="primary" [disabled]="consultationForm.invalid || isSubmitting">
+              <mat-icon>save</mat-icon>
+              {{ 'CONSULTATIONS.CREATE' | translate }}
+            </button>
+          </div>
+          
+          <div class="loading-container" *ngIf="isSubmitting">
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            <p class="loading-text">{{ 'CONSULTATIONS.CREATING' | translate }}</p>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

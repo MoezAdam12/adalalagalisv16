@@ -1,0 +1,191 @@
+<div class="task-list-container">
+  <div class="header-section">
+    <h1 class="page-title">{{ 'TASKS.TITLE' | translate }}</h1>
+    <div class="actions-container">
+      <button mat-raised-button color="primary" (click)="createNewTask()">
+        <mat-icon>add</mat-icon>
+        {{ 'TASKS.CREATE_NEW' | translate }}
+      </button>
+      <button mat-raised-button color="accent" (click)="viewTaskBoard()">
+        <mat-icon>dashboard</mat-icon>
+        {{ 'TASKS.VIEW_BOARD' | translate }}
+      </button>
+      <button mat-icon-button (click)="refreshTasks()" matTooltip="{{ 'COMMON.REFRESH' | translate }}">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>{{ 'COMMON.SEARCH' | translate }}</mat-label>
+          <input matInput (keyup)="applyFilter($event)" placeholder="{{ 'TASKS.SEARCH_PLACEHOLDER' | translate }}">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <div class="filter-buttons">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'TASKS.STATUS_FILTER' | translate }}</mat-label>
+            <mat-select [(value)]="statusFilter" (selectionChange)="applyStatusFilter($event.value)">
+              <mat-option value="">{{ 'TASKS.ALL_STATUSES' | translate }}</mat-option>
+              <mat-option value="todo">{{ 'TASKS.STATUS.TODO' | translate }}</mat-option>
+              <mat-option value="in_progress">{{ 'TASKS.STATUS.IN_PROGRESS' | translate }}</mat-option>
+              <mat-option value="review">{{ 'TASKS.STATUS.REVIEW' | translate }}</mat-option>
+              <mat-option value="completed">{{ 'TASKS.STATUS.COMPLETED' | translate }}</mat-option>
+              <mat-option value="cancelled">{{ 'TASKS.STATUS.CANCELLED' | translate }}</mat-option>
+              <mat-option value="blocked">{{ 'TASKS.STATUS.BLOCKED' | translate }}</mat-option>
+              <mat-option value="deferred">{{ 'TASKS.STATUS.DEFERRED' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'TASKS.PRIORITY_FILTER' | translate }}</mat-label>
+            <mat-select [(value)]="priorityFilter" (selectionChange)="applyPriorityFilter($event.value)">
+              <mat-option value="">{{ 'TASKS.ALL_PRIORITIES' | translate }}</mat-option>
+              <mat-option value="low">{{ 'TASKS.PRIORITY.LOW' | translate }}</mat-option>
+              <mat-option value="medium">{{ 'TASKS.PRIORITY.MEDIUM' | translate }}</mat-option>
+              <mat-option value="high">{{ 'TASKS.PRIORITY.HIGH' | translate }}</mat-option>
+              <mat-option value="urgent">{{ 'TASKS.PRIORITY.URGENT' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-button color="primary" (click)="clearFilters()" *ngIf="statusFilter || priorityFilter || assigneeFilter">
+            <mat-icon>clear</mat-icon>
+            {{ 'TASKS.CLEAR_FILTERS' | translate }}
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="loadTasks()">
+      {{ 'COMMON.TRY_AGAIN' | translate }}
+    </button>
+  </div>
+
+  <div class="table-container" *ngIf="!isLoading && !error">
+    <table mat-table [dataSource]="dataSource" matSort class="tasks-table">
+      <!-- Title Column -->
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'TASKS.TITLE_COLUMN' | translate }}</th>
+        <td mat-cell *matCellDef="let task" (click)="viewTask(task)">
+          <div class="task-title" [class.overdue]="isTaskOverdue(task)">
+            <mat-icon *ngIf="isTaskOverdue(task)" class="overdue-icon" matTooltip="{{ 'TASKS.OVERDUE' | translate }}">warning</mat-icon>
+            <span>{{ task.title }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'TASKS.STATUS_COLUMN' | translate }}</th>
+        <td mat-cell *matCellDef="let task" (click)="viewTask(task)">
+          <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+            {{ 'TASKS.STATUS.' + task.status.toUpperCase() | translate }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Priority Column -->
+      <ng-container matColumnDef="priority">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'TASKS.PRIORITY_COLUMN' | translate }}</th>
+        <td mat-cell *matCellDef="let task" (click)="viewTask(task)">
+          <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+            {{ 'TASKS.PRIORITY.' + task.priority.toUpperCase() | translate }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Due Date Column -->
+      <ng-container matColumnDef="dueDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'TASKS.DUE_DATE_COLUMN' | translate }}</th>
+        <td mat-cell *matCellDef="let task" (click)="viewTask(task)" [class.overdue]="isTaskOverdue(task)">
+          {{ task.dueDate ? (task.dueDate | date:'mediumDate') : ('TASKS.NO_DUE_DATE' | translate) }}
+        </td>
+      </ng-container>
+
+      <!-- Assigned To Column -->
+      <ng-container matColumnDef="assignedToName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'TASKS.ASSIGNED_TO_COLUMN' | translate }}</th>
+        <td mat-cell *matCellDef="let task" (click)="viewTask(task)">
+          <span *ngIf="task.assignedToName">{{ task.assignedToName }}</span>
+          <span class="unassigned" *ngIf="!task.assignedToName">{{ 'TASKS.UNASSIGNED' | translate }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.ACTIONS' | translate }}</th>
+        <td mat-cell *matCellDef="let task">
+          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Task actions">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="viewTask(task)">
+              <mat-icon>visibility</mat-icon>
+              <span>{{ 'COMMON.VIEW' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="assignTask(task, $event)">
+              <mat-icon>person_add</mat-icon>
+              <span>{{ 'TASKS.ASSIGN' | translate }}</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item [matMenuTriggerFor]="statusMenu">
+              <mat-icon>update</mat-icon>
+              <span>{{ 'TASKS.UPDATE_STATUS' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="deleteTask(task, $event)">
+              <mat-icon>delete</mat-icon>
+              <span>{{ 'COMMON.DELETE' | translate }}</span>
+            </button>
+          </mat-menu>
+          
+          <mat-menu #statusMenu="matMenu">
+            <button mat-menu-item (click)="updateTaskStatus(task, 'todo', $event)" *ngIf="task.status !== 'todo'">
+              <span class="status-badge status-todo">{{ 'TASKS.STATUS.TODO' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="updateTaskStatus(task, 'in_progress', $event)" *ngIf="task.status !== 'in_progress'">
+              <span class="status-badge status-in-progress">{{ 'TASKS.STATUS.IN_PROGRESS' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="updateTaskStatus(task, 'review', $event)" *ngIf="task.status !== 'review'">
+              <span class="status-badge status-review">{{ 'TASKS.STATUS.REVIEW' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="updateTaskStatus(task, 'completed', $event)" *ngIf="task.status !== 'completed'">
+              <span class="status-badge status-completed">{{ 'TASKS.STATUS.COMPLETED' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="updateTaskStatus(task, 'blocked', $event)" *ngIf="task.status !== 'blocked'">
+              <span class="status-badge status-blocked">{{ 'TASKS.STATUS.BLOCKED' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="updateTaskStatus(task, 'deferred', $event)" *ngIf="task.status !== 'deferred'">
+              <span class="status-badge status-deferred">{{ 'TASKS.STATUS.DEFERRED' | translate }}</span>
+            </button>
+            <button mat-menu-item (click)="updateTaskStatus(task, 'cancelled', $event)" *ngIf="task.status !== 'cancelled'">
+              <span class="status-badge status-cancelled">{{ 'TASKS.STATUS.CANCELLED' | translate }}</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="task-row"></tr>
+
+      <!-- Row shown when there is no matching data. -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell no-data-cell" colspan="6">
+          {{ 'TASKS.NO_DATA' | translate }}
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
+  </div>
+</div>

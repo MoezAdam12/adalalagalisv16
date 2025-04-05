@@ -1,0 +1,78 @@
+<div class="feedback-container">
+  <div class="header-section">
+    <button mat-icon-button (click)="goBack()" matTooltip="{{ 'COMMON.BACK' | translate }}">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ 'CONSULTATIONS.PROVIDE_FEEDBACK' | translate }}</h1>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p class="loading-text">{{ 'COMMON.LOADING' | translate }}</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button mat-button color="primary" (click)="goBack()">
+      {{ 'COMMON.GO_BACK' | translate }}
+    </button>
+  </div>
+
+  <div class="feedback-content" *ngIf="!isLoading && !error">
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="feedbackForm" (ngSubmit)="onSubmit()">
+          <div class="form-section">
+            <h2 class="section-title">{{ 'CONSULTATIONS.RATE_CONSULTATION' | translate }}</h2>
+            
+            <div class="rating-container">
+              <div class="rating-label">{{ 'CONSULTATIONS.RATING' | translate }}:</div>
+              <div class="star-rating">
+                <button type="button" mat-icon-button *ngFor="let star of ratingOptions" 
+                        [color]="feedbackForm.get('rating')?.value >= star ? 'accent' : ''"
+                        (click)="setRating(star)">
+                  <mat-icon>star</mat-icon>
+                </button>
+              </div>
+              <div class="rating-error" *ngIf="feedbackForm.get('rating')?.invalid && feedbackForm.get('rating')?.touched">
+                {{ 'CONSULTATIONS.RATING_REQUIRED' | translate }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-section">
+            <h2 class="section-title">{{ 'CONSULTATIONS.ADDITIONAL_COMMENTS' | translate }}</h2>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'CONSULTATIONS.COMMENTS' | translate }}</mat-label>
+              <textarea matInput formControlName="comments" rows="5"></textarea>
+              <mat-hint>{{ 'CONSULTATIONS.COMMENTS_HINT' | translate }}</mat-hint>
+              <mat-error *ngIf="feedbackForm.get('comments')?.hasError('maxlength')">
+                {{ 'CONSULTATIONS.COMMENTS_TOO_LONG' | translate }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" mat-button (click)="goBack()">
+              {{ 'COMMON.CANCEL' | translate }}
+            </button>
+            <button type="submit" mat-raised-button color="primary" [disabled]="feedbackForm.invalid || isSubmitting">
+              {{ 'CONSULTATIONS.SUBMIT_FEEDBACK' | translate }}
+            </button>
+          </div>
+          
+          <div class="loading-container" *ngIf="isSubmitting">
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            <p class="loading-text">{{ 'CONSULTATIONS.SUBMITTING' | translate }}</p>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    
+    <div class="feedback-info">
+      <mat-icon>info</mat-icon>
+      <p>{{ 'CONSULTATIONS.FEEDBACK_INFO' | translate }}</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,56 @@
+<div class="assign-dialog-container">
+  <h2 mat-dialog-title>{{ 'TASKS.ASSIGN_TASK' | translate }}</h2>
+  
+  <div class="task-info">
+    <span class="task-title">{{ data.taskTitle }}</span>
+  </div>
+  
+  <mat-dialog-content>
+    <form [formGroup]="assignForm" (ngSubmit)="onSubmit()">
+      <div class="form-field">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'TASKS.ASSIGN_TO' | translate }}</mat-label>
+          <mat-select formControlName="assignedTo">
+            <mat-option *ngFor="let user of users" [value]="user.id">
+              {{ user.name }} - {{ user.role }}
+              <span *ngIf="user.department">({{ user.department }})</span>
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="assignForm.get('assignedTo')?.hasError('required')">
+            {{ 'TASKS.ASSIGNEE_REQUIRED' | translate }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'TASKS.ASSIGNMENT_NOTES' | translate }}</mat-label>
+          <textarea matInput formControlName="notes" rows="3" placeholder="{{ 'TASKS.ASSIGNMENT_NOTES_PLACEHOLDER' | translate }}"></textarea>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <mat-checkbox formControlName="notifyUser">
+          {{ 'TASKS.NOTIFY_USER' | translate }}
+        </mat-checkbox>
+      </div>
+      
+      <div class="loading-container" *ngIf="isLoading">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      </div>
+      
+      <div class="error-container" *ngIf="error">
+        <p class="error-message">{{ error }}</p>
+      </div>
+    </form>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">
+      {{ 'COMMON.CANCEL' | translate }}
+    </button>
+    <button mat-raised-button color="primary" [disabled]="assignForm.invalid || isLoading" (click)="onSubmit()">
+      {{ 'TASKS.ASSIGN' | translate }}
+    </button>
+  </mat-dialog-actions>
+</div>

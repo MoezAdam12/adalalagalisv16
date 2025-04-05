@@ -1,0 +1,452 @@
+<div class="analytics-reporting-container" dir="rtl">
+  <!-- شريط العنوان -->
+  <div class="page-header">
+    <div class="header-title">
+      <h1>التحليلات والتقارير</h1>
+      <p class="header-subtitle">تحليلات استخدام المستأجرين، تحليلات الاشتراكات، وتقارير مخصصة</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" [matMenuTriggerFor]="exportMenu">
+        <mat-icon>file_download</mat-icon>
+        تصدير التقرير
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportReport('pdf')">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>تصدير كملف PDF</span>
+        </button>
+        <button mat-menu-item (click)="exportReport('xlsx')">
+          <mat-icon>table_chart</mat-icon>
+          <span>تصدير كملف Excel</span>
+        </button>
+        <button mat-menu-item (click)="exportReport('csv')">
+          <mat-icon>list_alt</mat-icon>
+          <span>تصدير كملف CSV</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- مرشحات التاريخ -->
+  <div class="date-filters">
+    <mat-card>
+      <mat-card-content>
+        <div class="date-range-container">
+          <div class="date-range-inputs">
+            <mat-form-field appearance="outline">
+              <mat-label>تاريخ البداية</mat-label>
+              <input matInput [matDatepicker]="startPicker" [(ngModel)]="dateRange.start">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+            <span class="date-separator">إلى</span>
+            <mat-form-field appearance="outline">
+              <mat-label>تاريخ النهاية</mat-label>
+              <input matInput [matDatepicker]="endPicker" [(ngModel)]="dateRange.end">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+            <button mat-raised-button color="primary" (click)="updateDateRange()">
+              <mat-icon>search</mat-icon>
+              تطبيق
+            </button>
+          </div>
+          <div class="date-range-presets">
+            <button mat-button (click)="setPresetRange('today')">اليوم</button>
+            <button mat-button (click)="setPresetRange('yesterday')">الأمس</button>
+            <button mat-button (click)="setPresetRange('last7days')">آخر 7 أيام</button>
+            <button mat-button (click)="setPresetRange('last30days')">آخر 30 يوم</button>
+            <button mat-button (click)="setPresetRange('thisMonth')">هذا الشهر</button>
+            <button mat-button (click)="setPresetRange('lastMonth')">الشهر الماضي</button>
+            <button mat-button (click)="setPresetRange('thisYear')">هذا العام</button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- علامات التبويب -->
+  <div class="tabs-section">
+    <mat-card>
+      <mat-card-content>
+        <div class="tabs-container">
+          <div class="tab-buttons">
+            <button 
+              [ngClass]="{'active': activeTab === 'dashboard'}" 
+              (click)="changeTab('dashboard')"
+              class="tab-button"
+            >
+              <mat-icon>dashboard</mat-icon>
+              لوحة المعلومات
+            </button>
+            <button 
+              [ngClass]="{'active': activeTab === 'tenants'}" 
+              (click)="changeTab('tenants')"
+              class="tab-button"
+            >
+              <mat-icon>business</mat-icon>
+              تحليلات المستأجرين
+            </button>
+            <button 
+              [ngClass]="{'active': activeTab === 'subscriptions'}" 
+              (click)="changeTab('subscriptions')"
+              class="tab-button"
+            >
+              <mat-icon>card_membership</mat-icon>
+              تحليلات الاشتراكات
+            </button>
+            <button 
+              [ngClass]="{'active': activeTab === 'reports'}" 
+              (click)="changeTab('reports')"
+              class="tab-button"
+            >
+              <mat-icon>assessment</mat-icon>
+              التقارير المخصصة
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- محتوى علامة تبويب لوحة المعلومات -->
+  <div *ngIf="activeTab === 'dashboard'" class="tab-content">
+    <div class="loading-shade" *ngIf="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+
+    <!-- بطاقات الإحصائيات -->
+    <div class="statistics-cards">
+      <div class="stat-card">
+        <div class="stat-icon bg-primary">
+          <mat-icon>business</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-title">إجمالي المستأجرين</h3>
+          <p class="stat-value">{{ statistics.totalTenants }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-title">المستأجرين النشطين</h3>
+          <p class="stat-value">{{ statistics.activeTenants }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-info">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-title">إجمالي المستخدمين</h3>
+          <p class="stat-value">{{ statistics.totalUsers }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-warning">
+          <mat-icon>person</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-title">المستخدمين النشطين</h3>
+          <p class="stat-value">{{ statistics.activeUsers }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-danger">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-title">إجمالي الإيرادات</h3>
+          <p class="stat-value">{{ formatCurrency(statistics.totalRevenue) }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon bg-secondary">
+          <mat-icon>date_range</mat-icon>
+        </div>
+        <div class="stat-content">
+          <h3 class="stat-title">إيرادات الشهر</h3>
+          <p class="stat-value">{{ formatCurrency(statistics.monthlyRevenue) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- الرسوم البيانية -->
+    <div class="dashboard-charts">
+      <div class="chart-row">
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>نمو المستأجرين</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <!-- هنا سيتم إضافة الرسم البياني لنمو المستأجرين -->
+              <div class="chart-placeholder">
+                <p>رسم بياني لنمو المستأجرين</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>الإيرادات الشهرية</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <!-- هنا سيتم إضافة الرسم البياني للإيرادات الشهرية -->
+              <div class="chart-placeholder">
+                <p>رسم بياني للإيرادات الشهرية</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <div class="chart-row">
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>استخدام الوحدات</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <!-- هنا سيتم إضافة الرسم البياني لاستخدام الوحدات -->
+              <div class="chart-placeholder">
+                <p>رسم بياني لاستخدام الوحدات</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>توزيع الاشتراكات</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <!-- هنا سيتم إضافة الرسم البياني لتوزيع الاشتراكات -->
+              <div class="chart-placeholder">
+                <p>رسم بياني لتوزيع الاشتراكات</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- محتوى علامة تبويب تحليلات المستأجرين -->
+  <div *ngIf="activeTab === 'tenants'" class="tab-content">
+    <div class="loading-shade" *ngIf="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+
+    <div class="search-filter">
+      <mat-form-field appearance="outline">
+        <mat-label>بحث في المستأجرين</mat-label>
+        <input matInput (keyup)="applyTenantFilter($event)" placeholder="البحث باسم المستأجر">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="table-container">
+      <table mat-table [dataSource]="tenantDataSource" matSort #tenantSort="matSort" class="tenants-table">
+        <!-- عمود المستأجر -->
+        <ng-container matColumnDef="tenant">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> المستأجر </th>
+          <td mat-cell *matCellDef="let tenant">
+            <div class="tenant-name-cell">
+              <div class="tenant-avatar">{{ tenant.name.charAt(0) }}</div>
+              <div class="tenant-name">{{ tenant.name }}</div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- عمود المستخدمين النشطين -->
+        <ng-container matColumnDef="activeUsers">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> المستخدمين النشطين </th>
+          <td mat-cell *matCellDef="let tenant"> {{ tenant.activeUsers }} / {{ tenant.totalUsers }} </td>
+        </ng-container>
+
+        <!-- عمود عدد القضايا -->
+        <ng-container matColumnDef="casesCount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> القضايا </th>
+          <td mat-cell *matCellDef="let tenant"> {{ tenant.casesCount }} </td>
+        </ng-container>
+
+        <!-- عمود عدد العقود -->
+        <ng-container matColumnDef="contractsCount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> العقود </th>
+          <td mat-cell *matCellDef="let tenant"> {{ tenant.contractsCount }} </td>
+        </ng-container>
+
+        <!-- عمود عدد الاستشارات -->
+        <ng-container matColumnDef="consultationsCount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> الاستشارات </th>
+          <td mat-cell *matCellDef="let tenant"> {{ tenant.consultationsCount }} </td>
+        </ng-container>
+
+        <!-- عمود آخر نشاط -->
+        <ng-container matColumnDef="lastActivity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> آخر نشاط </th>
+          <td mat-cell *matCellDef="let tenant"> {{ formatDate(tenant.lastActivity) }} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="tenantDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: tenantDisplayedColumns;"></tr>
+
+        <!-- صف عدم وجود بيانات -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="tenantDisplayedColumns.length">
+            <div class="no-data-message">
+              <mat-icon>search_off</mat-icon>
+              <p>لا توجد بيانات مطابقة للبحث</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator #tenantPaginator="matPaginator" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من تحليلات المستأجرين"></mat-paginator>
+    </div>
+  </div>
+
+  <!-- محتوى علامة تبويب تحليلات الاشتراكات -->
+  <div *ngIf="activeTab === 'subscriptions'" class="tab-content">
+    <div class="loading-shade" *ngIf="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+
+    <div class="search-filter">
+      <mat-form-field appearance="outline">
+        <mat-label>بحث في الاشتراكات</mat-label>
+        <input matInput (keyup)="applySubscriptionFilter($event)" placeholder="البحث باسم الخطة">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="table-container">
+      <table mat-table [dataSource]="subscriptionDataSource" matSort #subscriptionSort="matSort" class="subscriptions-table">
+        <!-- عمود الخطة -->
+        <ng-container matColumnDef="package">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> الخطة </th>
+          <td mat-cell *matCellDef="let subscription">
+            <div class="package-name-cell">
+              <div class="package-icon">
+                <mat-icon>card_membership</mat-icon>
+              </div>
+              <div class="package-name">{{ subscription.name }}</div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- عمود عدد المستأجرين -->
+        <ng-container matColumnDef="tenantCount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> عدد المستأجرين </th>
+          <td mat-cell *matCellDef="let subscription"> {{ subscription.tenantCount }} </td>
+        </ng-container>
+
+        <!-- عمود الإيرادات -->
+        <ng-container matColumnDef="revenue">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> الإيرادات </th>
+          <td mat-cell *matCellDef="let subscription"> {{ formatCurrency(subscription.revenue) }} </td>
+        </ng-container>
+
+        <!-- عمود متوسط الاستخدام -->
+        <ng-container matColumnDef="averageUsage">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> متوسط الاستخدام </th>
+          <td mat-cell *matCellDef="let subscription"> {{ formatPercentage(subscription.averageUsage) }} </td>
+        </ng-container>
+
+        <!-- عمود معدل التجديد -->
+        <ng-container matColumnDef="renewalRate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> معدل التجديد </th>
+          <td mat-cell *matCellDef="let subscription"> {{ formatPercentage(subscription.renewalRate) }} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="subscriptionDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: subscriptionDisplayedColumns;"></tr>
+
+        <!-- صف عدم وجود بيانات -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="subscriptionDisplayedColumns.length">
+            <div class="no-data-message">
+              <mat-icon>search_off</mat-icon>
+              <p>لا توجد بيانات مطابقة للبحث</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator #subscriptionPaginator="matPaginator" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من تحليلات الاشتراكات"></mat-paginator>
+    </div>
+  </div>
+
+  <!-- محتوى علامة تبويب التقارير المخصصة -->
+  <div *ngIf="activeTab === 'reports'" class="tab-content">
+    <div class="loading-shade" *ngIf="loading">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+
+    <div class="custom-reports-list">
+      <mat-card *ngFor="let report of customReports">
+        <mat-card-header>
+          <div mat-card-avatar class="report-header-icon">
+            <mat-icon>assessment</mat-icon>
+          </div>
+          <mat-card-title>{{ report.name }}</mat-card-title>
+          <mat-card-subtitle>{{ report.description }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="report-details">
+            <p><strong>النوع:</strong> {{ report.type }}</p>
+            <p><strong>آخر تشغيل:</strong> {{ report.lastRun ? formatDate(report.lastRun) : 'لم يتم التشغيل بعد' }}</p>
+          </div>
+          <div class="report-results" *ngIf="report.expanded && report.results">
+            <h3>نتائج التقرير</h3>
+            <div class="results-container">
+              <!-- هنا سيتم عرض نتائج التقرير المخصص -->
+              <div class="results-placeholder" *ngIf="!report.results.length">
+                <p>لا توجد نتائج للعرض</p>
+              </div>
+              <table mat-table [dataSource]="report.results" *ngIf="report.results.length" class="results-table">
+                <ng-container *ngFor="let column of report.columns" [matColumnDef]="column.key">
+                  <th mat-header-cell *matHeaderCellDef> {{ column.label }} </th>
+                  <td mat-cell *matCellDef="let item"> {{ item[column.key] }} </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="report.columns.map(c => c.key)"></tr>
+                <tr mat-row *matRowDef="let row; columns: report.columns.map(c => c.key);"></tr>
+              </table>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="runCustomReport(report)">
+            <mat-icon>play_arrow</mat-icon>
+            تشغيل التقرير
+          </button>
+          <button mat-button color="accent" *ngIf="report.results" (click)="report.expanded = !report.expanded">
+            <mat-icon>{{ report.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ report.expanded ? 'إخفاء النتائج' : 'عرض النتائج' }}
+          </button>
+          <button mat-button [matMenuTriggerFor]="reportExportMenu">
+            <mat-icon>file_download</mat-icon>
+            تصدير
+          </button>
+          <mat-menu #reportExportMenu="matMenu">
+            <button mat-menu-item (click)="exportReport('pdf')">
+              <mat-icon>picture_as_pdf</mat-icon>
+              <span>تصدير كملف PDF</span>
+            </button>
+            <button mat-menu-item (click)="exportReport('xlsx')">
+              <mat-icon>table_chart</mat-icon>
+              <span>تصدير كملف Excel</span>
+            </button>
+            <button mat-menu-item (click)="exportReport('csv')">
+              <mat-icon>list_alt</mat-icon>
+              <span>تصدير كملف CSV</span>
+            </button>
+          </mat-menu>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

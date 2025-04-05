@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adalalegalis-ml-config
+data:
+  MODEL_CONFIG: |
+    {
+      "document_classification": {
+        "enabled": true,
+        "version": "v1",
+        "threshold": 0.75,
+        "languages": ["ar", "en"]
+      },
+      "contract_analysis": {
+        "enabled": true,
+        "version": "v1",
+        "threshold": 0.8,
+        "languages": ["ar", "en"]
+      },
+      "legal_entity_recognition": {
+        "enabled": true,
+        "version": "v1",
+        "threshold": 0.7,
+        "languages": ["ar", "en"]
+      },
+      "document_summarization": {
+        "enabled": true,
+        "version": "v1",
+        "max_length": 500,
+        "languages": ["ar", "en"]
+      }
+    }
+  TENSORFLOW_CONFIG: |
+    {
+      "intra_op_parallelism_threads": 4,
+      "inter_op_parallelism_threads": 4,
+      "allow_growth": true,
+      "gpu_memory_fraction": 0.8
+    }
+  OCR_CONFIG: |
+    {
+      "engine": "tesseract",
+      "languages": ["ara", "eng"],
+      "dpi": 300,
+      "page_segmentation_mode": 1,
+      "oem": 3
+    }

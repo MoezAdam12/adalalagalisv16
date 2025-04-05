@@ -1,0 +1,174 @@
+.document-list-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.actions-container {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-card {
+  margin-bottom: 20px;
+}
+
+.filter-field {
+  width: 100%;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.loading-text {
+  margin-top: 10px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.error-message {
+  color: #f44336;
+  margin-bottom: 10px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.documents-table {
+  width: 100%;
+}
+
+.document-row {
+  cursor: pointer;
+}
+
+.document-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.document-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-icon-pdf {
+  color: #f44336;
+}
+
+.file-icon-doc, .file-icon-docx {
+  color: #2196f3;
+}
+
+.file-icon-xls, .file-icon-xlsx {
+  color: #4caf50;
+}
+
+.file-icon-ppt, .file-icon-pptx {
+  color: #ff9800;
+}
+
+.file-icon-txt {
+  color: #607d8b;
+}
+
+.file-icon-jpg, .file-icon-jpeg, .file-icon-png {
+  color: #9c27b0;
+}
+
+.category-chip {
+  background-color: #e0e0e0;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+.no-category {
+  color: rgba(0, 0, 0, 0.54);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-draft {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-archived {
+  background-color: #fffde7;
+  color: #f9a825;
+}
+
+.status-deleted {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.no-data-cell {
+  text-align: center;
+  padding: 20px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] .document-title {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .actions-container {
+  flex-direction: row-reverse;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .actions-container {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .documents-table {
+    min-width: 650px;
+  }
+}
