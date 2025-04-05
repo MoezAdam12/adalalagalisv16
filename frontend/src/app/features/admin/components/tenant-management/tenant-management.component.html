@@ -1,0 +1,205 @@
+<div class="tenant-management-container" dir="rtl">
+  <!-- شريط العنوان -->
+  <div class="page-header">
+    <div class="header-title">
+      <h1>إدارة المستأجرين</h1>
+      <p class="header-subtitle">إدارة حسابات المستأجرين وباقات الاشتراك</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="openAddTenantDialog()">
+        <mat-icon>add</mat-icon>
+        إضافة مستأجر جديد
+      </button>
+    </div>
+  </div>
+
+  <!-- بطاقات الإحصائيات -->
+  <div class="statistics-cards">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <mat-icon>business</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">إجمالي المستأجرين</h3>
+        <p class="stat-value">{{ statistics.totalTenants }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">المستأجرين النشطين</h3>
+        <p class="stat-value">{{ statistics.activeTenants }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <mat-icon>access_time</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">الحسابات التجريبية</h3>
+        <p class="stat-value">{{ statistics.trialTenants }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-danger">
+        <mat-icon>block</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">الحسابات المعلقة</h3>
+        <p class="stat-value">{{ statistics.suspendedTenants }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-info">
+        <mat-icon>payments</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">إجمالي الإيرادات</h3>
+        <p class="stat-value">{{ statistics.totalRevenue | currency:'SAR':'symbol':'1.0-0' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- أدوات البحث والتصفية -->
+  <div class="filters-section">
+    <mat-card>
+      <mat-card-content>
+        <div class="filters-container">
+          <div class="search-filter">
+            <mat-form-field appearance="outline">
+              <mat-label>بحث</mat-label>
+              <input matInput (keyup)="applySearchFilter($event)" placeholder="البحث بالاسم أو البريد الإلكتروني" [value]="searchTerm">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="status-filter">
+            <mat-form-field appearance="outline">
+              <mat-label>الحالة</mat-label>
+              <mat-select [(value)]="statusFilter" (selectionChange)="applyFilters()">
+                <mat-option value="all">جميع الحالات</mat-option>
+                <mat-option value="active">نشط</mat-option>
+                <mat-option value="suspended">معلق</mat-option>
+                <mat-option value="trial">تجريبي</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="package-filter">
+            <mat-form-field appearance="outline">
+              <mat-label>الباقة</mat-label>
+              <mat-select [(value)]="packageFilter" (selectionChange)="applyFilters()">
+                <mat-option value="all">جميع الباقات</mat-option>
+                <mat-option *ngFor="let pkg of subscriptionPackages" [value]="pkg.id">{{ pkg.name }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="reset-filter">
+            <button mat-button color="primary" (click)="resetFilters()">
+              <mat-icon>refresh</mat-icon>
+              إعادة تعيين
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- جدول المستأجرين -->
+  <div class="tenants-table-section">
+    <mat-card>
+      <mat-card-content>
+        <div class="loading-shade" *ngIf="loading">
+          <mat-spinner diameter="50"></mat-spinner>
+        </div>
+
+        <div class="table-container">
+          <table mat-table [dataSource]="dataSource" matSort class="tenants-table">
+            <!-- عمود الاسم -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> اسم المستأجر </th>
+              <td mat-cell *matCellDef="let tenant">
+                <div class="tenant-name-cell">
+                  <div class="tenant-avatar">{{ tenant.name.charAt(0) }}</div>
+                  <div class="tenant-name">{{ tenant.name }}</div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- عمود البريد الإلكتروني -->
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> البريد الإلكتروني </th>
+              <td mat-cell *matCellDef="let tenant"> {{ tenant.email }} </td>
+            </ng-container>
+
+            <!-- عمود الباقة -->
+            <ng-container matColumnDef="subscriptionPackage">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> الباقة </th>
+              <td mat-cell *matCellDef="let tenant"> {{ getPackageName(tenant.subscriptionPackageId) }} </td>
+            </ng-container>
+
+            <!-- عمود الحالة -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> الحالة </th>
+              <td mat-cell *matCellDef="let tenant">
+                <span class="status-badge" [ngClass]="'badge-' + getStatusColor(tenant.status)">
+                  {{ getStatusText(tenant.status) }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- عمود عدد المستخدمين -->
+            <ng-container matColumnDef="usersCount">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> المستخدمين </th>
+              <td mat-cell *matCellDef="let tenant"> {{ tenant.usersCount || 0 }} </td>
+            </ng-container>
+
+            <!-- عمود تاريخ الإنشاء -->
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ الإنشاء </th>
+              <td mat-cell *matCellDef="let tenant"> {{ formatDate(tenant.createdAt) }} </td>
+            </ng-container>
+
+            <!-- عمود الإجراءات -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef> الإجراءات </th>
+              <td mat-cell *matCellDef="let tenant">
+                <div class="action-buttons">
+                  <button mat-icon-button color="primary" matTooltip="عرض التفاصيل" (click)="openTenantDetails(tenant)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button color="accent" matTooltip="تعديل" (click)="openEditTenantDialog(tenant)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button [color]="tenant.status === 'active' ? 'warn' : 'primary'" 
+                          [matTooltip]="tenant.status === 'active' ? 'تعليق' : 'تفعيل'"
+                          (click)="openStatusChangeConfirmation(tenant, tenant.status === 'active' ? 'suspended' : 'active')">
+                    <mat-icon>{{ tenant.status === 'active' ? 'block' : 'check_circle' }}</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" matTooltip="حذف" (click)="openDeleteConfirmation(tenant)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+            <!-- صف عدم وجود بيانات -->
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+                <div class="no-data-message">
+                  <mat-icon>search_off</mat-icon>
+                  <p>لا توجد بيانات مطابقة للبحث "{{ searchTerm }}"</p>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من المستأجرين"></mat-paginator>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

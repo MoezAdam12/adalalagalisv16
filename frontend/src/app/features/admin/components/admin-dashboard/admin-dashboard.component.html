@@ -1,0 +1,528 @@
+<div class="admin-dashboard-container" dir="rtl">
+  <!-- شريط العنوان -->
+  <div class="dashboard-header">
+    <div class="header-title">
+      <h1>لوحة تحكم المشرف</h1>
+      <p class="header-subtitle">إدارة المستأجرين والباقات</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="loadDashboardData()">
+        <mat-icon>refresh</mat-icon>
+        تحديث البيانات
+      </button>
+    </div>
+  </div>
+
+  <!-- شريط التنقل -->
+  <div class="dashboard-tabs">
+    <button 
+      class="tab-button" 
+      [ngClass]="{'active': activeTab === 'dashboard'}" 
+      (click)="changeTab('dashboard')"
+      aria-label="عرض لوحة المعلومات">
+      <mat-icon>dashboard</mat-icon>
+      <span>لوحة المعلومات</span>
+    </button>
+    <button 
+      class="tab-button" 
+      [ngClass]="{'active': activeTab === 'tenants'}" 
+      (click)="changeTab('tenants')"
+      aria-label="إدارة المستأجرين">
+      <mat-icon>business</mat-icon>
+      <span>المستأجرون</span>
+    </button>
+    <button 
+      class="tab-button" 
+      [ngClass]="{'active': activeTab === 'subscriptions'}" 
+      (click)="changeTab('subscriptions')"
+      aria-label="إدارة الاشتراكات">
+      <mat-icon>card_membership</mat-icon>
+      <span>الاشتراكات</span>
+    </button>
+    <button 
+      class="tab-button" 
+      [ngClass]="{'active': activeTab === 'packages'}" 
+      (click)="changeTab('packages')"
+      aria-label="إدارة الباقات">
+      <mat-icon>inventory_2</mat-icon>
+      <span>الباقات</span>
+    </button>
+  </div>
+
+  <!-- حالة التحميل والخطأ -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>جاري تحميل البيانات...</p>
+  </div>
+
+  <div *ngIf="error" class="error-container">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadDashboardData()">إعادة المحاولة</button>
+  </div>
+
+  <!-- محتوى لوحة المعلومات -->
+  <div *ngIf="!loading && !error" class="dashboard-content">
+    <!-- قسم لوحة المعلومات -->
+    <div *ngIf="activeTab === 'dashboard'" class="dashboard-overview">
+      <!-- بطاقات الإحصائيات -->
+      <div class="statistics-cards">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon bg-primary">
+              <mat-icon>business</mat-icon>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-title">إجمالي المستأجرين</h3>
+              <p class="stat-value">{{ statistics.totalTenants }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon bg-success">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-title">المستأجرون النشطون</h3>
+              <p class="stat-value">{{ statistics.activeTenants }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon bg-warning">
+              <mat-icon>hourglass_empty</mat-icon>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-title">المستأجرون التجريبيون</h3>
+              <p class="stat-value">{{ statistics.trialTenants }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon bg-info">
+              <mat-icon>card_membership</mat-icon>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-title">الاشتراكات النشطة</h3>
+              <p class="stat-value">{{ statistics.activeSubscriptions }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon bg-danger">
+              <mat-icon>event_busy</mat-icon>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-title">اشتراكات قاربت على الانتهاء</h3>
+              <p class="stat-value">{{ statistics.expiringSubscriptions }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-icon bg-success">
+              <mat-icon>payments</mat-icon>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-title">الإيرادات الشهرية</h3>
+              <p class="stat-value">{{ formatCurrency(statistics.monthlyRevenue) }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- الرسوم البيانية -->
+      <div class="charts-container">
+        <div class="chart-row">
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>نمو المستأجرين</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-placeholder">
+                <!-- هنا يتم إدراج الرسم البياني لنمو المستأجرين -->
+                <div class="chart-bars">
+                  <div *ngFor="let item of tenantGrowthData" class="chart-bar" [style.height.%]="(item.value / 160) * 100">
+                    <span class="bar-value">{{ item.value }}</span>
+                  </div>
+                </div>
+                <div class="chart-labels">
+                  <span *ngFor="let item of tenantGrowthData" class="chart-label">{{ item.name }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>الإيرادات الشهرية</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-placeholder">
+                <!-- هنا يتم إدراج الرسم البياني للإيرادات -->
+                <div class="chart-lines">
+                  <div *ngFor="let item of revenueData; let i = index" class="chart-point" 
+                       [style.bottom.%]="(item.value / 90000) * 100"
+                       [style.left.%]="(i / (revenueData.length - 1)) * 100">
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="chart-row">
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>توزيع الاشتراكات</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-placeholder">
+                <!-- هنا يتم إدراج الرسم البياني لتوزيع الاشتراكات -->
+                <div class="chart-pie">
+                  <div *ngFor="let item of subscriptionDistributionData; let i = index" class="pie-segment"
+                       [style.transform]="'rotate(' + (i * 90) + 'deg)'"
+                       [style.clip-path]="'polygon(50% 50%, 50% 0%, ' + (50 + 50 * Math.sin((i + 1) * 90 * Math.PI / 180)) + '% ' + (50 - 50 * Math.cos((i + 1) * 90 * Math.PI / 180)) + '%)'">
+                  </div>
+                </div>
+                <div class="pie-legend">
+                  <div *ngFor="let item of subscriptionDistributionData; let i = index" class="legend-item">
+                    <span class="legend-color" [style.background-color]="'var(--color-' + (i + 1) + ')'"></span>
+                    <span class="legend-label">{{ item.name }}: {{ item.value }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>استخدام الوحدات</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-placeholder">
+                <!-- هنا يتم إدراج الرسم البياني لاستخدام الوحدات -->
+                <div class="chart-horizontal-bars">
+                  <div *ngFor="let item of moduleUsageData" class="horizontal-bar-item">
+                    <span class="bar-label">{{ item.name }}</span>
+                    <div class="bar-container">
+                      <div class="bar-fill" [style.width.%]="item.value"></div>
+                      <span class="bar-value">{{ item.value }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم إدارة المستأجرين -->
+    <div *ngIf="activeTab === 'tenants'" class="tenants-management">
+      <div class="section-header">
+        <h2>إدارة المستأجرين</h2>
+        <div class="section-actions">
+          <button mat-raised-button color="primary" (click)="openAddTenantDialog()">
+            <mat-icon>add</mat-icon>
+            إضافة مستأجر جديد
+          </button>
+          <button mat-raised-button color="accent" (click)="exportData('tenants', tenantsDataSource)">
+            <mat-icon>file_download</mat-icon>
+            تصدير البيانات
+          </button>
+        </div>
+      </div>
+
+      <!-- نموذج البحث والتصفية -->
+      <mat-card class="filter-card">
+        <mat-card-content>
+          <form [formGroup]="searchForm" class="filter-form">
+            <div class="filter-row">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>بحث</mat-label>
+                <input matInput formControlName="searchTerm" placeholder="البحث بالاسم، البريد الإلكتروني، أو الرقم">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>الحالة</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="all">جميع الحالات</mat-option>
+                  <mat-option value="نشط">نشط</mat-option>
+                  <mat-option value="غير نشط">غير نشط</mat-option>
+                  <mat-option value="معلق">معلق</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>نوع الاشتراك</mat-label>
+                <mat-select formControlName="subscriptionType">
+                  <mat-option value="all">جميع الأنواع</mat-option>
+                  <mat-option value="أساسي">أساسي</mat-option>
+                  <mat-option value="متقدم">متقدم</mat-option>
+                  <mat-option value="احترافي">احترافي</mat-option>
+                  <mat-option value="مؤسسات">مؤسسات</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-button color="warn" (click)="searchForm.reset({
+                searchTerm: '',
+                status: 'all',
+                dateRange: null,
+                subscriptionType: 'all'
+              })">
+                <mat-icon>clear</mat-icon>
+                إعادة تعيين
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- جدول المستأجرين -->
+      <div class="table-container">
+        <table mat-table [dataSource]="tenantsDataSource" matSort class="tenants-table">
+          <!-- عمود الرقم -->
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> الرقم </th>
+            <td mat-cell *matCellDef="let tenant"> {{ tenant.id }} </td>
+          </ng-container>
+
+          <!-- عمود الاسم -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> الاسم </th>
+            <td mat-cell *matCellDef="let tenant"> {{ tenant.name }} </td>
+          </ng-container>
+
+          <!-- عمود البريد الإلكتروني -->
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> البريد الإلكتروني </th>
+            <td mat-cell *matCellDef="let tenant"> {{ tenant.email }} </td>
+          </ng-container>
+
+          <!-- عمود الحالة -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> الحالة </th>
+            <td mat-cell *matCellDef="let tenant">
+              <span class="status-badge" [ngClass]="{
+                'status-active': tenant.status === 'نشط',
+                'status-inactive': tenant.status === 'غير نشط',
+                'status-pending': tenant.status === 'معلق'
+              }">
+                {{ tenant.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- عمود تاريخ الإنشاء -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ الإنشاء </th>
+            <td mat-cell *matCellDef="let tenant"> {{ formatDate(tenant.createdAt) }} </td>
+          </ng-container>
+
+          <!-- عمود نوع الاشتراك -->
+          <ng-container matColumnDef="subscriptionType">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> نوع الاشتراك </th>
+            <td mat-cell *matCellDef="let tenant"> {{ tenant.subscriptionType }} </td>
+          </ng-container>
+
+          <!-- عمود الإجراءات -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef> الإجراءات </th>
+            <td mat-cell *matCellDef="let tenant">
+              <button mat-icon-button color="primary" matTooltip="عرض التفاصيل" (click)="openTenantDetailsDialog(tenant)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button color="accent" matTooltip="تعديل" (click)="openEditTenantDialog(tenant)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" matTooltip="حذف" (click)="openDeleteTenantDialog(tenant)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="tenantColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: tenantColumns;"></tr>
+
+          <!-- صف عدم وجود بيانات -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="tenantColumns.length">
+              <div class="no-data-message">
+                <mat-icon>search_off</mat-icon>
+                <p>لا توجد بيانات مطابقة للبحث</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <mat-paginator #tenantPaginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من المستأجرين"></mat-paginator>
+      </div>
+    </div>
+
+    <!-- قسم إدارة الاشتراكات -->
+    <div *ngIf="activeTab === 'subscriptions'" class="subscriptions-management">
+      <div class="section-header">
+        <h2>إدارة الاشتراكات</h2>
+        <div class="section-actions">
+          <button mat-raised-button color="primary" (click)="openAddSubscriptionDialog()">
+            <mat-icon>add</mat-icon>
+            إضافة اشتراك جديد
+          </button>
+          <button mat-raised-button color="accent" (click)="exportData('subscriptions', subscriptionsDataSource)">
+            <mat-icon>file_download</mat-icon>
+            تصدير البيانات
+          </button>
+        </div>
+      </div>
+
+      <!-- جدول الاشتراكات -->
+      <div class="table-container">
+        <table mat-table [dataSource]="subscriptionsDataSource" matSort class="subscriptions-table">
+          <!-- عمود الرقم -->
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> الرقم </th>
+            <td mat-cell *matCellDef="let subscription"> {{ subscription.id }} </td>
+          </ng-container>
+
+          <!-- عمود اسم المستأجر -->
+          <ng-container matColumnDef="tenantName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> المستأجر </th>
+            <td mat-cell *matCellDef="let subscription"> {{ subscription.tenantName }} </td>
+          </ng-container>
+
+          <!-- عمود اسم الباقة -->
+          <ng-container matColumnDef="packageName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> الباقة </th>
+            <td mat-cell *matCellDef="let subscription"> {{ subscription.packageName }} </td>
+          </ng-container>
+
+          <!-- عمود تاريخ البدء -->
+          <ng-container matColumnDef="startDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ البدء </th>
+            <td mat-cell *matCellDef="let subscription"> {{ formatDate(subscription.startDate) }} </td>
+          </ng-container>
+
+          <!-- عمود تاريخ الانتهاء -->
+          <ng-container matColumnDef="endDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ الانتهاء </th>
+            <td mat-cell *matCellDef="let subscription" 
+                [ngClass]="{'expiring-soon': isDateExpiringSoon(subscription.endDate)}"> 
+              {{ formatDate(subscription.endDate) }} 
+            </td>
+          </ng-container>
+
+          <!-- عمود الحالة -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> الحالة </th>
+            <td mat-cell *matCellDef="let subscription">
+              <span class="status-badge" [ngClass]="{
+                'status-active': subscription.status === 'نشط',
+                'status-inactive': subscription.status === 'منتهي',
+                'status-pending': subscription.status === 'معلق'
+              }">
+                {{ subscription.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- عمود المبلغ -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> المبلغ </th>
+            <td mat-cell *matCellDef="let subscription"> {{ formatCurrency(subscription.amount) }} </td>
+          </ng-container>
+
+          <!-- عمود الإجراءات -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef> الإجراءات </th>
+            <td mat-cell *matCellDef="let subscription">
+              <button mat-icon-button color="accent" matTooltip="تعديل" (click)="openEditSubscriptionDialog(subscription)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" matTooltip="إلغاء" (click)="openCancelSubscriptionDialog(subscription)">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="subscriptionColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: subscriptionColumns;"></tr>
+
+          <!-- صف عدم وجود بيانات -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="subscriptionColumns.length">
+              <div class="no-data-message">
+                <mat-icon>search_off</mat-icon>
+                <p>لا توجد بيانات مطابقة للبحث</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <mat-paginator #subscriptionPaginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من الاشتراكات"></mat-paginator>
+      </div>
+    </div>
+
+    <!-- قسم إدارة الباقات -->
+    <div *ngIf="activeTab === 'packages'" class="packages-management">
+      <div class="section-header">
+        <h2>إدارة الباقات</h2>
+        <div class="section-actions">
+          <button mat-raised-button color="primary" (click)="openAddPackageDialog()">
+            <mat-icon>add</mat-icon>
+            إضافة باقة جديدة
+          </button>
+          <button mat-raised-button color="accent" (click)="exportData('packages', packagesDataSource)">
+            <mat-icon>file_download</mat-icon>
+            تصدير البيانات
+          </button>
+        </div>
+      </div>
+
+      <!-- عرض بطاقات الباقات -->
+      <div class="packages-grid">
+        <mat-card class="package-card" *ngFor="let package of packagesDataSource.data">
+          <mat-card-header>
+            <mat-card-title>{{ package.name }}</mat-card-title>
+            <mat-card-subtitle>{{ package.description }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="package-price">
+              <span class="price-value">{{ formatCurrency(package.price) }}</span>
+              <span class="price-period">/ {{ package.duration }} {{ package.durationType }}</span>
+            </div>
+            <div class="package-details">
+              <p><strong>الحد الأقصى للمستخدمين:</strong> {{ package.maxUsers }}</p>
+              <div class="package-features">
+                <h4>المميزات:</h4>
+                <ul>
+                  <li *ngFor="let feature of package.features">{{ feature }}</li>
+                </ul>
+              </div>
+            </div>
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button mat-button color="accent" (click)="openEditPackageDialog(package)">
+              <mat-icon>edit</mat-icon>
+              تعديل
+            </button>
+            <button mat-button color="warn" (click)="openDeletePackageDialog(package)">
+              <mat-icon>delete</mat-icon>
+              حذف
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</div>

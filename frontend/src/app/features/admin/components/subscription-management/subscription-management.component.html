@@ -1,0 +1,374 @@
+<div class="subscription-management-container" dir="rtl">
+  <!-- شريط العنوان -->
+  <div class="page-header">
+    <div class="header-title">
+      <h1>إدارة الاشتراكات</h1>
+      <p class="header-subtitle">إدارة خطط الاشتراك واشتراكات المستأجرين</p>
+    </div>
+  </div>
+
+  <!-- بطاقات الإحصائيات -->
+  <div class="statistics-cards">
+    <div class="stat-card">
+      <div class="stat-icon bg-primary">
+        <mat-icon>card_membership</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">إجمالي الخطط</h3>
+        <p class="stat-value">{{ statistics.totalPackages }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-success">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">الخطط النشطة</h3>
+        <p class="stat-value">{{ statistics.activePackages }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-info">
+        <mat-icon>people</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">إجمالي الاشتراكات</h3>
+        <p class="stat-value">{{ statistics.totalSubscriptions }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-warning">
+        <mat-icon>account_balance_wallet</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">الاشتراكات النشطة</h3>
+        <p class="stat-value">{{ statistics.activeSubscriptions }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon bg-danger">
+        <mat-icon>payments</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-title">إجمالي الإيرادات</h3>
+        <p class="stat-value">{{ statistics.totalRevenue | currency:'SAR':'symbol':'1.0-0' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- علامات التبويب -->
+  <div class="tabs-section">
+    <mat-card>
+      <mat-card-content>
+        <div class="tabs-container">
+          <div class="tab-buttons">
+            <button 
+              [ngClass]="{'active': activeTab === 'packages'}" 
+              (click)="changeTab('packages')"
+              class="tab-button"
+            >
+              <mat-icon>card_membership</mat-icon>
+              خطط الاشتراك
+            </button>
+            <button 
+              [ngClass]="{'active': activeTab === 'subscriptions'}" 
+              (click)="changeTab('subscriptions')"
+              class="tab-button"
+            >
+              <mat-icon>assignment</mat-icon>
+              اشتراكات المستأجرين
+            </button>
+            <button 
+              [ngClass]="{'active': activeTab === 'billing'}" 
+              (click)="changeTab('billing')"
+              class="tab-button"
+            >
+              <mat-icon>receipt</mat-icon>
+              الفوترة
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- محتوى علامة تبويب خطط الاشتراك -->
+  <div *ngIf="activeTab === 'packages'" class="tab-content">
+    <div class="tab-header">
+      <div class="tab-title">
+        <h2>خطط الاشتراك</h2>
+        <p>إدارة خطط الاشتراك المتاحة للمستأجرين</p>
+      </div>
+      <div class="tab-actions">
+        <button mat-raised-button color="primary" (click)="openAddPackageDialog()">
+          <mat-icon>add</mat-icon>
+          إضافة خطة اشتراك
+        </button>
+      </div>
+    </div>
+
+    <div class="search-filter">
+      <mat-form-field appearance="outline">
+        <mat-label>بحث في خطط الاشتراك</mat-label>
+        <input matInput (keyup)="applyPackagesFilter($event)" placeholder="البحث بالاسم أو الوصف">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="table-container">
+      <div class="loading-shade" *ngIf="loading">
+        <mat-spinner diameter="50"></mat-spinner>
+      </div>
+
+      <table mat-table [dataSource]="packagesDataSource" matSort #packagesSort="matSort" class="packages-table">
+        <!-- عمود الاسم -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> اسم الخطة </th>
+          <td mat-cell *matCellDef="let package">
+            <div class="package-name-cell">
+              <div class="package-icon" [ngClass]="'bg-' + getStatusColor(package.status)">
+                <mat-icon>card_membership</mat-icon>
+              </div>
+              <div class="package-name">{{ package.name }}</div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- عمود السعر -->
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> السعر </th>
+          <td mat-cell *matCellDef="let package"> {{ package.price | currency:'SAR':'symbol':'1.0-0' }} </td>
+        </ng-container>
+
+        <!-- عمود دورة الفوترة -->
+        <ng-container matColumnDef="billingCycle">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> دورة الفوترة </th>
+          <td mat-cell *matCellDef="let package"> {{ getBillingCycleText(package.billingCycle) }} </td>
+        </ng-container>
+
+        <!-- عمود الميزات -->
+        <ng-container matColumnDef="features">
+          <th mat-header-cell *matHeaderCellDef> الميزات </th>
+          <td mat-cell *matCellDef="let package">
+            <div class="features-cell">
+              <span class="feature-badge" *ngFor="let feature of package.features.slice(0, 3)">{{ feature }}</span>
+              <span class="more-features" *ngIf="package.features.length > 3">+{{ package.features.length - 3 }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- عمود الحد الأقصى للمستخدمين -->
+        <ng-container matColumnDef="maxUsers">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> الحد الأقصى للمستخدمين </th>
+          <td mat-cell *matCellDef="let package"> {{ package.maxUsers }} </td>
+        </ng-container>
+
+        <!-- عمود الحالة -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> الحالة </th>
+          <td mat-cell *matCellDef="let package">
+            <span class="status-badge" [ngClass]="'badge-' + getStatusColor(package.status)">
+              {{ getStatusText(package.status) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- عمود الإجراءات -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> الإجراءات </th>
+          <td mat-cell *matCellDef="let package">
+            <div class="action-buttons">
+              <button mat-icon-button color="accent" matTooltip="تعديل" (click)="openEditPackageDialog(package)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button [color]="package.status === 'active' ? 'warn' : 'primary'" 
+                      [matTooltip]="package.status === 'active' ? 'تعطيل' : 'تفعيل'"
+                      (click)="openPackageStatusChangeConfirmation(package, package.status === 'active' ? 'inactive' : 'active')">
+                <mat-icon>{{ package.status === 'active' ? 'block' : 'check_circle' }}</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" matTooltip="حذف" (click)="openDeletePackageConfirmation(package)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="packagesDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: packagesDisplayedColumns;"></tr>
+
+        <!-- صف عدم وجود بيانات -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="packagesDisplayedColumns.length">
+            <div class="no-data-message">
+              <mat-icon>search_off</mat-icon>
+              <p>لا توجد خطط اشتراك مطابقة للبحث</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator #packagesPaginator="matPaginator" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من خطط الاشتراك"></mat-paginator>
+    </div>
+  </div>
+
+  <!-- محتوى علامة تبويب اشتراكات المستأجرين -->
+  <div *ngIf="activeTab === 'subscriptions'" class="tab-content">
+    <div class="tab-header">
+      <div class="tab-title">
+        <h2>اشتراكات المستأجرين</h2>
+        <p>إدارة اشتراكات المستأجرين في خطط الاشتراك المختلفة</p>
+      </div>
+    </div>
+
+    <div class="search-filter">
+      <mat-form-field appearance="outline">
+        <mat-label>بحث في الاشتراكات</mat-label>
+        <input matInput (keyup)="applySubscriptionsFilter($event)" placeholder="البحث باسم المستأجر أو الخطة">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="table-container">
+      <div class="loading-shade" *ngIf="loading">
+        <mat-spinner diameter="50"></mat-spinner>
+      </div>
+
+      <table mat-table [dataSource]="subscriptionsDataSource" matSort #subscriptionsSort="matSort" class="subscriptions-table">
+        <!-- عمود المستأجر -->
+        <ng-container matColumnDef="tenant">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> المستأجر </th>
+          <td mat-cell *matCellDef="let subscription">
+            <div class="tenant-name-cell">
+              <div class="tenant-avatar">{{ subscription.tenant.name.charAt(0) }}</div>
+              <div class="tenant-name">{{ subscription.tenant.name }}</div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- عمود الخطة -->
+        <ng-container matColumnDef="package">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> الخطة </th>
+          <td mat-cell *matCellDef="let subscription"> {{ subscription.package.name }} </td>
+        </ng-container>
+
+        <!-- عمود تاريخ البدء -->
+        <ng-container matColumnDef="startDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ البدء </th>
+          <td mat-cell *matCellDef="let subscription"> {{ formatDate(subscription.startDate) }} </td>
+        </ng-container>
+
+        <!-- عمود تاريخ الانتهاء -->
+        <ng-container matColumnDef="endDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> تاريخ الانتهاء </th>
+          <td mat-cell *matCellDef="let subscription"> {{ formatDate(subscription.endDate) }} </td>
+        </ng-container>
+
+        <!-- عمود الحالة -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> الحالة </th>
+          <td mat-cell *matCellDef="let subscription">
+            <span class="status-badge" [ngClass]="'badge-' + getStatusColor(subscription.status)">
+              {{ getStatusText(subscription.status) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- عمود المبلغ -->
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> المبلغ </th>
+          <td mat-cell *matCellDef="let subscription"> {{ subscription.amount | currency:'SAR':'symbol':'1.0-0' }} </td>
+        </ng-container>
+
+        <!-- عمود الإجراءات -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> الإجراءات </th>
+          <td mat-cell *matCellDef="let subscription">
+            <div class="action-buttons">
+              <button mat-icon-button color="warn" matTooltip="إلغاء الاشتراك" (click)="openCancelSubscriptionConfirmation(subscription)">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="subscriptionsDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: subscriptionsDisplayedColumns;"></tr>
+
+        <!-- صف عدم وجود بيانات -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="subscriptionsDisplayedColumns.length">
+            <div class="no-data-message">
+              <mat-icon>search_off</mat-icon>
+              <p>لا توجد اشتراكات مطابقة للبحث</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator #subscriptionsPaginator="matPaginator" [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons aria-label="اختر صفحة من الاشتراكات"></mat-paginator>
+    </div>
+  </div>
+
+  <!-- محتوى علامة تبويب الفوترة -->
+  <div *ngIf="activeTab === 'billing'" class="tab-content">
+    <div class="tab-header">
+      <div class="tab-title">
+        <h2>الفوترة</h2>
+        <p>إدارة فواتير المستأجرين وعمليات الدفع</p>
+      </div>
+    </div>
+
+    <div class="billing-stats">
+      <div class="billing-stat-card">
+        <div class="stat-header">
+          <h3>إجمالي الإيرادات</h3>
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="stat-value">{{ statistics.totalRevenue | currency:'SAR':'symbol':'1.0-0' }}</div>
+      </div>
+      <div class="billing-stat-card">
+        <div class="stat-header">
+          <h3>إيرادات الشهر الحالي</h3>
+          <mat-icon>date_range</mat-icon>
+        </div>
+        <div class="stat-value">{{ statistics.monthlyRevenue | currency:'SAR':'symbol':'1.0-0' }}</div>
+      </div>
+    </div>
+
+    <div class="billing-charts">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>تحليل الإيرادات</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-placeholder">
+            <p>سيتم عرض الرسم البياني للإيرادات هنا</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>توزيع الاشتراكات</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-placeholder">
+            <p>سيتم عرض الرسم البياني لتوزيع الاشتراكات هنا</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="recent-invoices">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>أحدث الفواتير</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="invoices-placeholder">
+            <p>سيتم عرض أحدث الفواتير هنا</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

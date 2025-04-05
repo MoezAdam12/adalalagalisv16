@@ -1,0 +1,98 @@
+<div class="role-form-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ isEditMode ? 'تعديل الدور' : 'إضافة دور جديد' }}</h2>
+    </div>
+    <div class="card-body">
+      <div *ngIf="loading" class="text-center p-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!loading">
+        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+        <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+        <form [formGroup]="roleForm" (ngSubmit)="onSubmit()">
+          <div class="mb-3">
+            <label for="name" class="form-label">اسم الدور *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="name" 
+              formControlName="name"
+              [ngClass]="{'is-invalid': roleForm.get('name')?.touched && roleForm.get('name')?.invalid}"
+            >
+            <div *ngIf="roleForm.get('name')?.touched && roleForm.get('name')?.invalid" class="invalid-feedback">
+              <div *ngIf="roleForm.get('name')?.errors?.['required']">اسم الدور مطلوب</div>
+              <div *ngIf="roleForm.get('name')?.errors?.['minlength']">اسم الدور يجب أن يكون على الأقل حرفين</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">وصف الدور</label>
+            <textarea 
+              class="form-control" 
+              id="description" 
+              formControlName="description"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">الصلاحيات</label>
+            <div class="permissions-container">
+              <div *ngFor="let module of objectKeys(groupedPermissions)" class="permission-module mb-3">
+                <div class="module-header d-flex align-items-center mb-2">
+                  <div class="form-check">
+                    <input 
+                      type="checkbox" 
+                      class="form-check-input" 
+                      [id]="'module-' + module"
+                      [checked]="isModuleFullySelected(module)"
+                      [indeterminate]="isModulePartiallySelected(module)"
+                      (change)="toggleAllModulePermissions(module, $event)"
+                    >
+                    <label class="form-check-label fw-bold" [for]="'module-' + module">
+                      {{ module }}
+                    </label>
+                  </div>
+                </div>
+                <div class="module-permissions ms-4">
+                  <div class="row">
+                    <div *ngFor="let permission of groupedPermissions[module]" class="col-md-6 mb-2">
+                      <div class="form-check">
+                        <input 
+                          type="checkbox" 
+                          class="form-check-input" 
+                          [id]="'permission-' + permission.id"
+                          [value]="permission.id"
+                          [checked]="roleForm.get('permissions')?.value?.includes(permission.id)"
+                          (change)="$event.target.checked ? 
+                            roleForm.get('permissions')?.setValue([...roleForm.get('permissions')?.value || [], permission.id]) : 
+                            roleForm.get('permissions')?.setValue(roleForm.get('permissions')?.value?.filter(id => id !== permission.id) || [])"
+                        >
+                        <label class="form-check-label" [for]="'permission-' + permission.id">
+                          {{ permission.name }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-secondary me-2" (click)="cancel()">إلغاء</button>
+            <button type="submit" class="btn btn-primary" [disabled]="submitting">
+              <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              {{ isEditMode ? 'تحديث' : 'إضافة' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,123 @@
+<div class="notification-settings-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>إعدادات الإشعارات</h2>
+    </div>
+    <div class="card-body">
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+      <div *ngIf="loading" class="text-center p-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!loading">
+        <p class="text-muted mb-4">يمكنك تخصيص كيفية استلام الإشعارات لكل نوع من أنواع الإشعارات.</p>
+        
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>نوع الإشعار</th>
+                <th class="text-center">البريد الإلكتروني</th>
+                <th class="text-center">داخل التطبيق</th>
+                <th class="text-center">الرسائل النصية</th>
+                <th class="text-center">الإشعارات الفورية</th>
+                <th>ملخص البريد الإلكتروني</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let setting of notificationSettings">
+                <td>{{ getCategoryLabel(setting.category) }}</td>
+                <td class="text-center">
+                  <div class="form-check form-switch d-flex justify-content-center">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [id]="'email-' + setting.category" 
+                      [checked]="setting.email_enabled"
+                      (change)="updateSetting(setting, 'email_enabled', $event.target.checked)"
+                    >
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div class="form-check form-switch d-flex justify-content-center">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [id]="'in-app-' + setting.category" 
+                      [checked]="setting.in_app_enabled"
+                      (change)="updateSetting(setting, 'in_app_enabled', $event.target.checked)"
+                    >
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div class="form-check form-switch d-flex justify-content-center">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [id]="'sms-' + setting.category" 
+                      [checked]="setting.sms_enabled"
+                      (change)="updateSetting(setting, 'sms_enabled', $event.target.checked)"
+                    >
+                  </div>
+                </td>
+                <td class="text-center">
+                  <div class="form-check form-switch d-flex justify-content-center">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [id]="'push-' + setting.category" 
+                      [checked]="setting.push_enabled"
+                      (change)="updateSetting(setting, 'push_enabled', $event.target.checked)"
+                    >
+                  </div>
+                </td>
+                <td>
+                  <select 
+                    class="form-select form-select-sm" 
+                    [id]="'digest-' + setting.category"
+                    [value]="setting.email_digest"
+                    (change)="updateSetting(setting, 'email_digest', $event.target.value)"
+                    [disabled]="!setting.email_enabled"
+                  >
+                    <option *ngFor="let option of digestOptions" [value]="option.value">{{ option.label }}</option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-4">
+          <h3>معلومات حول خيارات الإشعارات</h3>
+          <ul class="list-group">
+            <li class="list-group-item">
+              <strong>البريد الإلكتروني:</strong> استلام الإشعارات عبر البريد الإلكتروني.
+            </li>
+            <li class="list-group-item">
+              <strong>داخل التطبيق:</strong> عرض الإشعارات داخل التطبيق في قائمة الإشعارات.
+            </li>
+            <li class="list-group-item">
+              <strong>الرسائل النصية:</strong> استلام الإشعارات عبر رسائل SMS (يتطلب إعداد رقم الهاتف).
+            </li>
+            <li class="list-group-item">
+              <strong>الإشعارات الفورية:</strong> استلام إشعارات فورية على المتصفح أو الجهاز المحمول.
+            </li>
+            <li class="list-group-item">
+              <strong>ملخص البريد الإلكتروني:</strong>
+              <ul>
+                <li><strong>فوري:</strong> إرسال كل إشعار فور حدوثه.</li>
+                <li><strong>يومي:</strong> إرسال ملخص يومي بجميع الإشعارات.</li>
+                <li><strong>أسبوعي:</strong> إرسال ملخص أسبوعي بجميع الإشعارات.</li>
+                <li><strong>لا ترسل:</strong> عدم إرسال إشعارات البريد الإلكتروني لهذه الفئة.</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
