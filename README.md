@@ -54,4 +54,7 @@ Adalalegalis هو نظام شامل لإدارة المكاتب القانوني
 للاستفسارات أو الدعم، يرجى التواصل مع فريق Adalalegalis على support@adalalegalis.com.
 # adalalagalisv16
 # adalalagalisv16
+<<<<<<< HEAD
+=======
 # adalalagalisv16
+>>>>>>> eb33c0e2afc17f8bce441d1234460a4a51f3a646
