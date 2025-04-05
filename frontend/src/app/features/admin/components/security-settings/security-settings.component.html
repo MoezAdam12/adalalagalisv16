@@ -1,0 +1,570 @@
+<div class="security-settings-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>إعدادات الأمان المتقدمة</h2>
+      <p class="text-muted">تكوين إعدادات الأمان لتعزيز حماية النظام والبيانات</p>
+    </div>
+    <div class="card-body">
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+      <div *ngIf="loading" class="text-center p-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+
+      <div *ngIf="!loading">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeTab === 'password'" href="javascript:void(0)" (click)="setActiveTab('password')">
+              سياسة كلمات المرور
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeTab === 'mfa'" href="javascript:void(0)" (click)="setActiveTab('mfa')">
+              المصادقة الثنائية
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeTab === 'session'" href="javascript:void(0)" (click)="setActiveTab('session')">
+              إدارة الجلسات
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeTab === 'ip'" href="javascript:void(0)" (click)="setActiveTab('ip')">
+              قيود عناوين IP
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeTab === 'advanced'" href="javascript:void(0)" (click)="setActiveTab('advanced')">
+              إعدادات متقدمة
+            </a>
+          </li>
+        </ul>
+
+        <form [formGroup]="securityForm" (ngSubmit)="onSubmit()">
+          <!-- Password Policy Tab -->
+          <div *ngIf="activeTab === 'password'" class="tab-content">
+            <h3>سياسة كلمات المرور</h3>
+            <p class="text-muted">تكوين متطلبات كلمات المرور لضمان أمان الحسابات</p>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="password_min_length" class="form-label">الحد الأدنى لطول كلمة المرور *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="password_min_length" 
+                  formControlName="password_min_length"
+                  [ngClass]="{'is-invalid': securityForm.get('password_min_length')?.touched && securityForm.get('password_min_length')?.invalid}"
+                >
+                <div *ngIf="securityForm.get('password_min_length')?.touched && securityForm.get('password_min_length')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('password_min_length')?.errors?.['required']">الحد الأدنى لطول كلمة المرور مطلوب</div>
+                  <div *ngIf="securityForm.get('password_min_length')?.errors?.['min']">يجب أن يكون الحد الأدنى لطول كلمة المرور 6 أحرف على الأقل</div>
+                  <div *ngIf="securityForm.get('password_min_length')?.errors?.['max']">لا يمكن أن يتجاوز الحد الأدنى لطول كلمة المرور 128 حرفًا</div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="password_expiry_days" class="form-label">مدة صلاحية كلمة المرور (بالأيام) *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="password_expiry_days" 
+                  formControlName="password_expiry_days"
+                  [ngClass]="{'is-invalid': securityForm.get('password_expiry_days')?.touched && securityForm.get('password_expiry_days')?.invalid}"
+                >
+                <div *ngIf="securityForm.get('password_expiry_days')?.touched && securityForm.get('password_expiry_days')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('password_expiry_days')?.errors?.['required']">مدة صلاحية كلمة المرور مطلوبة</div>
+                  <div *ngIf="securityForm.get('password_expiry_days')?.errors?.['min']">لا يمكن أن تكون مدة صلاحية كلمة المرور سالبة</div>
+                </div>
+                <div class="form-text">0 تعني عدم انتهاء صلاحية كلمة المرور</div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="password_history_count" class="form-label">عدد كلمات المرور السابقة المحفوظة *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="password_history_count" 
+                  formControlName="password_history_count"
+                  [ngClass]="{'is-invalid': securityForm.get('password_history_count')?.touched && securityForm.get('password_history_count')?.invalid}"
+                >
+                <div *ngIf="securityForm.get('password_history_count')?.touched && securityForm.get('password_history_count')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('password_history_count')?.errors?.['required']">عدد كلمات المرور السابقة مطلوب</div>
+                  <div *ngIf="securityForm.get('password_history_count')?.errors?.['min']">لا يمكن أن يكون عدد كلمات المرور السابقة سالبًا</div>
+                </div>
+                <div class="form-text">0 تعني عدم حفظ كلمات المرور السابقة</div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">متطلبات تعقيد كلمة المرور</label>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="password_require_uppercase" formControlName="password_require_uppercase">
+                <label class="form-check-label" for="password_require_uppercase">
+                  تتطلب حرفًا كبيرًا واحدًا على الأقل (A-Z)
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="password_require_lowercase" formControlName="password_require_lowercase">
+                <label class="form-check-label" for="password_require_lowercase">
+                  تتطلب حرفًا صغيرًا واحدًا على الأقل (a-z)
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="password_require_numbers" formControlName="password_require_numbers">
+                <label class="form-check-label" for="password_require_numbers">
+                  تتطلب رقمًا واحدًا على الأقل (0-9)
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="password_require_symbols" formControlName="password_require_symbols">
+                <label class="form-check-label" for="password_require_symbols">
+                  تتطلب رمزًا خاصًا واحدًا على الأقل (!@#$%^&*)
+                </label>
+              </div>
+            </div>
+            
+            <!-- Password Tester -->
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5>اختبار كلمة المرور</h5>
+              </div>
+              <div class="card-body">
+                <form [formGroup]="passwordTestForm" (ngSubmit)="testPassword()">
+                  <div class="input-group mb-3">
+                    <input 
+                      type="password" 
+                      class="form-control" 
+                      placeholder="أدخل كلمة مرور لاختبارها" 
+                      formControlName="password"
+                      [ngClass]="{'is-invalid': passwordTestForm.get('password')?.touched && passwordTestForm.get('password')?.invalid}"
+                    >
+                    <button class="btn btn-outline-primary" type="submit" [disabled]="passwordTestForm.invalid">اختبار</button>
+                  </div>
+                </form>
+                
+                <div *ngIf="passwordTestResult" class="mt-3">
+                  <div class="alert" [ngClass]="passwordTestResult.is_valid ? 'alert-success' : 'alert-danger'">
+                    <strong>النتيجة:</strong> {{ passwordTestResult.is_valid ? 'كلمة المرور تلبي جميع المتطلبات' : 'كلمة المرور لا تلبي جميع المتطلبات' }}
+                  </div>
+                  
+                  <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      الطول ({{ passwordTestResult.policy.min_length }} أحرف على الأقل)
+                      <span class="badge" [ngClass]="passwordTestResult.validation_results.length ? 'bg-success' : 'bg-danger'">
+                        <i class="bi" [ngClass]="passwordTestResult.validation_results.length ? 'bi-check-lg' : 'bi-x-lg'"></i>
+                      </span>
+                    </li>
+                    <li *ngIf="passwordTestResult.policy.require_uppercase" class="list-group-item d-flex justify-content-between align-items-center">
+                      حرف كبير (A-Z)
+                      <span class="badge" [ngClass]="passwordTestResult.validation_results.uppercase ? 'bg-success' : 'bg-danger'">
+                        <i class="bi" [ngClass]="passwordTestResult.validation_results.uppercase ? 'bi-check-lg' : 'bi-x-lg'"></i>
+                      </span>
+                    </li>
+                    <li *ngIf="passwordTestResult.policy.require_lowercase" class="list-group-item d-flex justify-content-between align-items-center">
+                      حرف صغير (a-z)
+                      <span class="badge" [ngClass]="passwordTestResult.validation_results.lowercase ? 'bg-success' : 'bg-danger'">
+                        <i class="bi" [ngClass]="passwordTestResult.validation_results.lowercase ? 'bi-check-lg' : 'bi-x-lg'"></i>
+                      </span>
+                    </li>
+                    <li *ngIf="passwordTestResult.policy.require_numbers" class="list-group-item d-flex justify-content-between align-items-center">
+                      رقم (0-9)
+                      <span class="badge" [ngClass]="passwordTestResult.validation_results.numbers ? 'bg-success' : 'bg-danger'">
+                        <i class="bi" [ngClass]="passwordTestResult.validation_results.numbers ? 'bi-check-lg' : 'bi-x-lg'"></i>
+                      </span>
+                    </li>
+                    <li *ngIf="passwordTestResult.policy.require_symbols" class="list-group-item d-flex justify-content-between align-items-center">
+                      رمز خاص (!@#$%^&*)
+                      <span class="badge" [ngClass]="passwordTestResult.validation_results.symbols ? 'bg-success' : 'bg-danger'">
+                        <i class="bi" [ngClass]="passwordTestResult.validation_results.symbols ? 'bi-check-lg' : 'bi-x-lg'"></i>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Two-Factor Authentication Tab -->
+          <div *ngIf="activeTab === 'mfa'" class="tab-content">
+            <h3>المصادقة الثنائية</h3>
+            <p class="text-muted">تكوين إعدادات المصادقة الثنائية لتعزيز أمان الحسابات</p>
+            
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="mfa_enabled" formControlName="mfa_enabled">
+                <label class="form-check-label" for="mfa_enabled">
+                  تمكين المصادقة الثنائية
+                </label>
+              </div>
+              <div class="form-text">السماح للمستخدمين بتمكين المصادقة الثنائية لحساباتهم</div>
+            </div>
+            
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="mfa_required" formControlName="mfa_required" [disabled]="!securityForm.get('mfa_enabled')?.value">
+                <label class="form-check-label" for="mfa_required">
+                  إلزام المصادقة الثنائية
+                </label>
+              </div>
+              <div class="form-text">إلزام جميع المستخدمين بتمكين المصادقة الثنائية لحساباتهم</div>
+            </div>
+            
+            <div class="mb-3" formGroupName="mfa_methods">
+              <label class="form-label">طرق المصادقة الثنائية المسموح بها</label>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="mfa_methods_app" formControlName="app" [disabled]="!securityForm.get('mfa_enabled')?.value">
+                <label class="form-check-label" for="mfa_methods_app">
+                  تطبيق المصادقة (Google Authenticator، Microsoft Authenticator، إلخ)
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="mfa_methods_sms" formControlName="sms" [disabled]="!securityForm.get('mfa_enabled')?.value">
+                <label class="form-check-label" for="mfa_methods_sms">
+                  الرسائل النصية (SMS)
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="mfa_methods_email" formControlName="email" [disabled]="!securityForm.get('mfa_enabled')?.value">
+                <label class="form-check-label" for="mfa_methods_email">
+                  البريد الإلكتروني
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Session Management Tab -->
+          <div *ngIf="activeTab === 'session'" class="tab-content">
+            <h3>إدارة الجلسات</h3>
+            <p class="text-muted">تكوين إعدادات جلسات المستخدمين وسياسات انتهاء الصلاحية</p>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="session_timeout_minutes" class="form-label">مهلة الجلسة (بالدقائق) *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="session_timeout_minutes" 
+                  formControlName="session_timeout_minutes"
+                  [ngClass]="{'is-invalid': securityForm.get('session_timeout_minutes')?.touched && securityForm.get('session_timeout_minutes')?.invalid}"
+                >
+                <div *ngIf="securityForm.get('session_timeout_minutes')?.touched && securityForm.get('session_timeout_minutes')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('session_timeout_minutes')?.errors?.['required']">مهلة الجلسة مطلوبة</div>
+                  <div *ngIf="securityForm.get('session_timeout_minutes')?.errors?.['min']">يجب أن تكون مهلة الجلسة دقيقة واحدة على الأقل</div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="session_inactivity_timeout_minutes" class="form-label">مهلة عدم النشاط (بالدقائق) *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="session_inactivity_timeout_minutes" 
+                  formControlName="session_inactivity_timeout_minutes"
+                  [ngClass]="{'is-invalid': securityForm.get('session_inactivity_timeout_minutes')?.touched && securityForm.get('session_inactivity_timeout_minutes')?.invalid}"
+                >
+                <div *ngIf="securityForm.get('session_inactivity_timeout_minutes')?.touched && securityForm.get('session_inactivity_timeout_minutes')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('session_inactivity_timeout_minutes')?.errors?.['required']">مهلة عدم النشاط مطلوبة</div>
+                  <div *ngIf="securityForm.get('session_inactivity_timeout_minutes')?.errors?.['min']">لا يمكن أن تكون مهلة عدم النشاط سالبة</div>
+                </div>
+                <div class="form-text">0 تعني عدم تسجيل الخروج بسبب عدم النشاط</div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="session_absolute_timeout_hours" class="form-label">المهلة المطلقة للجلسة (بالساعات) *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="session_absolute_timeout_hours" 
+                  formControlName="session_absolute_timeout_hours"
+                  [ngClass]="{'is-invalid': securityForm.get('session_absolute_timeout_hours')?.touched && securityForm.get('session_absolute_timeout_hours')?.invalid}"
+                >
+                <div *ngIf="securityForm.get('session_absolute_timeout_hours')?.touched && securityForm.get('session_absolute_timeout_hours')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('session_absolute_timeout_hours')?.errors?.['required']">المهلة المطلقة للجلسة مطلوبة</div>
+                  <div *ngIf="securityForm.get('session_absolute_timeout_hours')?.errors?.['min']">لا يمكن أن تكون المهلة المطلقة للجلسة سالبة</div>
+                </div>
+                <div class="form-text">0 تعني عدم وجود مهلة مطلقة</div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="session_concurrent_max" class="form-label">الحد الأقصى للجلسات المتزامنة *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="session_concurrent_max" 
+                  formControlName="session_concurrent_max"
+                  [ngClass]="{'is-invalid': securityForm.get('session_concurrent_max')?.touched && securityForm.get('session_concurrent_max')?.invalid}"
+                >
+                <div *ngIf="securityForm.get('session_concurrent_max')?.touched && securityForm.get('session_concurrent_max')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('session_concurrent_max')?.errors?.['required']">الحد الأقصى للجلسات المتزامنة مطلوب</div>
+                  <div *ngIf="securityForm.get('session_concurrent_max')?.errors?.['min']">يجب أن يكون الحد الأقصى للجلسات المتزامنة 1 على الأقل</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Active Sessions -->
+            <div class="card mb-4">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">الجلسات النشطة</h5>
+                <button type="button" class="btn btn-sm btn-danger" (click)="terminateAllSessions()">إنهاء جميع الجلسات</button>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>عنوان IP</th>
+                        <th>المتصفح / الجهاز</th>
+                        <th>تاريخ البدء</th>
+                        <th>آخر نشاط</th>
+                        <th>الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let session of activeSessions">
+                        <td>{{ session.ip_address }}</td>
+                        <td>{{ session.user_agent }}</td>
+                        <td>{{ session.created_at | date:'medium' }}</td>
+                        <td>{{ session.last_activity | date:'medium' }}</td>
+                        <td>
+                          <button 
+                            type="button" 
+                            class="btn btn-sm btn-outline-danger" 
+                            (click)="terminateSession(session.id)"
+                            [disabled]="session.is_current"
+                          >
+                            {{ session.is_current ? 'الجلسة الحالية' : 'إنهاء' }}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr *ngIf="activeSessions.length === 0">
+                        <td colspan="5" class="text-center">لا توجد جلسات نشطة</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- IP Restrictions Tab -->
+          <div *ngIf="activeTab === 'ip'" class="tab-content">
+            <h3>قيود عناوين IP</h3>
+            <p class="text-muted">تكوين قائمة عناوين IP المسموح بها للوصول إلى النظام</p>
+            
+            <div *ngIf="ipError" class="alert alert-danger">{{ ipError }}</div>
+            <div *ngIf="ipSuccess" class="alert alert-success">{{ ipSuccess }}</div>
+            
+            <form [formGroup]="ipWhitelistForm" (ngSubmit)="updateIPWhitelist()">
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="ip_whitelist_enabled" formControlName="ip_whitelist_enabled">
+                  <label class="form-check-label" for="ip_whitelist_enabled">
+                    تمكين قائمة عناوين IP المسموح بها
+                  </label>
+                </div>
+                <div class="form-text">عند التمكين، سيتم السماح فقط لعناوين IP المدرجة في القائمة بالوصول إلى النظام</div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="ip_whitelist" class="form-label">قائمة عناوين IP المسموح بها</label>
+                <textarea 
+                  class="form-control" 
+                  id="ip_whitelist" 
+                  formControlName="ip_whitelist"
+                  rows="5"
+                  placeholder="أدخل عنوان IP واحد في كل سطر"
+                  [disabled]="!ipWhitelistForm.get('ip_whitelist_enabled')?.value"
+                ></textarea>
+                <div class="form-text">أدخل عنوان IP واحد في كل سطر. يمكنك استخدام نطاقات CIDR (مثل 192.168.1.0/24)</div>
+              </div>
+              
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary" [disabled]="loading">
+                  <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  حفظ قائمة عناوين IP
+                </button>
+              </div>
+            </form>
+          </div>
+          
+          <!-- Advanced Security Tab -->
+          <div *ngIf="activeTab === 'advanced'" class="tab-content">
+            <h3>إعدادات الأمان المتقدمة</h3>
+            <p class="text-muted">تكوين إعدادات الأمان المتقدمة للنظام</p>
+            
+            <div class="mb-4">
+              <h4>أمان تسجيل الدخول</h4>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="max_login_attempts" class="form-label">الحد الأقصى لمحاولات تسجيل الدخول *</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="max_login_attempts" 
+                    formControlName="max_login_attempts"
+                    [ngClass]="{'is-invalid': securityForm.get('max_login_attempts')?.touched && securityForm.get('max_login_attempts')?.invalid}"
+                  >
+                  <div *ngIf="securityForm.get('max_login_attempts')?.touched && securityForm.get('max_login_attempts')?.invalid" class="invalid-feedback">
+                    <div *ngIf="securityForm.get('max_login_attempts')?.errors?.['required']">الحد الأقصى لمحاولات تسجيل الدخول مطلوب</div>
+                    <div *ngIf="securityForm.get('max_login_attempts')?.errors?.['min']">يجب أن يكون الحد الأقصى لمحاولات تسجيل الدخول 1 على الأقل</div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="lockout_duration_minutes" class="form-label">مدة القفل (بالدقائق) *</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="lockout_duration_minutes" 
+                    formControlName="lockout_duration_minutes"
+                    [ngClass]="{'is-invalid': securityForm.get('lockout_duration_minutes')?.touched && securityForm.get('lockout_duration_minutes')?.invalid}"
+                  >
+                  <div *ngIf="securityForm.get('lockout_duration_minutes')?.touched && securityForm.get('lockout_duration_minutes')?.invalid" class="invalid-feedback">
+                    <div *ngIf="securityForm.get('lockout_duration_minutes')?.errors?.['required']">مدة القفل مطلوبة</div>
+                    <div *ngIf="securityForm.get('lockout_duration_minutes')?.errors?.['min']">يجب أن تكون مدة القفل دقيقة واحدة على الأقل</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <h4>أمان واجهة برمجة التطبيقات (API)</h4>
+              
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="api_rate_limit_enabled" formControlName="api_rate_limit_enabled">
+                  <label class="form-check-label" for="api_rate_limit_enabled">
+                    تمكين حد معدل طلبات API
+                  </label>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="api_rate_limit_requests" class="form-label">الحد الأقصى للطلبات *</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="api_rate_limit_requests" 
+                    formControlName="api_rate_limit_requests"
+                    [ngClass]="{'is-invalid': securityForm.get('api_rate_limit_requests')?.touched && securityForm.get('api_rate_limit_requests')?.invalid}"
+                    [disabled]="!securityForm.get('api_rate_limit_enabled')?.value"
+                  >
+                  <div *ngIf="securityForm.get('api_rate_limit_requests')?.touched && securityForm.get('api_rate_limit_requests')?.invalid" class="invalid-feedback">
+                    <div *ngIf="securityForm.get('api_rate_limit_requests')?.errors?.['required']">الحد الأقصى للطلبات مطلوب</div>
+                    <div *ngIf="securityForm.get('api_rate_limit_requests')?.errors?.['min']">يجب أن يكون الحد الأقصى للطلبات 1 على الأقل</div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="api_rate_limit_window_minutes" class="form-label">نافذة الوقت (بالدقائق) *</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    id="api_rate_limit_window_minutes" 
+                    formControlName="api_rate_limit_window_minutes"
+                    [ngClass]="{'is-invalid': securityForm.get('api_rate_limit_window_minutes')?.touched && securityForm.get('api_rate_limit_window_minutes')?.invalid}"
+                    [disabled]="!securityForm.get('api_rate_limit_enabled')?.value"
+                  >
+                  <div *ngIf="securityForm.get('api_rate_limit_window_minutes')?.touched && securityForm.get('api_rate_limit_window_minutes')?.invalid" class="invalid-feedback">
+                    <div *ngIf="securityForm.get('api_rate_limit_window_minutes')?.errors?.['required']">نافذة الوقت مطلوبة</div>
+                    <div *ngIf="securityForm.get('api_rate_limit_window_minutes')?.errors?.['min']">يجب أن تكون نافذة الوقت دقيقة واحدة على الأقل</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <h4>سجلات التدقيق</h4>
+              
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="audit_log_enabled" formControlName="audit_log_enabled">
+                  <label class="form-check-label" for="audit_log_enabled">
+                    تمكين سجلات التدقيق
+                  </label>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="audit_log_retention_days" class="form-label">مدة الاحتفاظ بالسجلات (بالأيام) *</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="audit_log_retention_days" 
+                  formControlName="audit_log_retention_days"
+                  [ngClass]="{'is-invalid': securityForm.get('audit_log_retention_days')?.touched && securityForm.get('audit_log_retention_days')?.invalid}"
+                  [disabled]="!securityForm.get('audit_log_enabled')?.value"
+                >
+                <div *ngIf="securityForm.get('audit_log_retention_days')?.touched && securityForm.get('audit_log_retention_days')?.invalid" class="invalid-feedback">
+                  <div *ngIf="securityForm.get('audit_log_retention_days')?.errors?.['required']">مدة الاحتفاظ بالسجلات مطلوبة</div>
+                  <div *ngIf="securityForm.get('audit_log_retention_days')?.errors?.['min']">يجب أن تكون مدة الاحتفاظ بالسجلات يوم واحد على الأقل</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <h4>إعدادات CORS</h4>
+              
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="cors_enabled" formControlName="cors_enabled">
+                  <label class="form-check-label" for="cors_enabled">
+                    تمكين CORS
+                  </label>
+                </div>
+                <div class="form-text">تمكين مشاركة الموارد عبر المنشأ (CORS) للسماح بالوصول من مواقع أخرى</div>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <h4>رؤوس الأمان</h4>
+              
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="security_headers_enabled" formControlName="security_headers_enabled">
+                  <label class="form-check-label" for="security_headers_enabled">
+                    تمكين رؤوس الأمان
+                  </label>
+                </div>
+                <div class="form-text">تمكين رؤوس HTTP الأمنية مثل X-XSS-Protection و X-Content-Type-Options</div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="content_security_policy_enabled" formControlName="content_security_policy_enabled">
+                  <label class="form-check-label" for="content_security_policy_enabled">
+                    تمكين سياسة أمان المحتوى (CSP)
+                  </label>
+                </div>
+                <div class="form-text">تمكين سياسة أمان المحتوى لمنع هجمات XSS وحقن البيانات</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Form Buttons -->
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-secondary" (click)="resetSettings()">
+              إعادة تعيين إلى الإعدادات الافتراضية
+            </button>
+            
+            <button type="submit" class="btn btn-primary" [disabled]="loading">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              حفظ الإعدادات
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

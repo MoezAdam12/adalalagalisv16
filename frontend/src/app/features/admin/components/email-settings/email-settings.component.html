@@ -1,0 +1,221 @@
+<div class="email-settings-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>إعدادات البريد الإلكتروني</h2>
+    </div>
+    <div class="card-body">
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+      <div *ngIf="loading" class="text-center p-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+
+      <form *ngIf="!loading" [formGroup]="emailConfigForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label for="provider" class="form-label">مزود خدمة البريد الإلكتروني *</label>
+          <select 
+            class="form-select" 
+            id="provider" 
+            formControlName="provider"
+            (change)="onProviderChange()"
+            [ngClass]="{'is-invalid': emailConfigForm.get('provider')?.touched && emailConfigForm.get('provider')?.invalid}"
+          >
+            <option *ngFor="let provider of providers" [value]="provider.value">{{ provider.label }}</option>
+          </select>
+          <div *ngIf="emailConfigForm.get('provider')?.touched && emailConfigForm.get('provider')?.invalid" class="invalid-feedback">
+            مزود خدمة البريد الإلكتروني مطلوب
+          </div>
+        </div>
+
+        <!-- SMTP Settings -->
+        <div *ngIf="emailConfigForm.get('provider')?.value === 'smtp'">
+          <div class="row">
+            <div class="col-md-8 mb-3">
+              <label for="host" class="form-label">خادم SMTP *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="host" 
+                formControlName="host"
+                placeholder="smtp.example.com"
+                [ngClass]="{'is-invalid': emailConfigForm.get('host')?.touched && emailConfigForm.get('host')?.invalid}"
+              >
+              <div *ngIf="emailConfigForm.get('host')?.touched && emailConfigForm.get('host')?.invalid" class="invalid-feedback">
+                خادم SMTP مطلوب
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="port" class="form-label">المنفذ *</label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="port" 
+                formControlName="port"
+                placeholder="587"
+                [ngClass]="{'is-invalid': emailConfigForm.get('port')?.touched && emailConfigForm.get('port')?.invalid}"
+              >
+              <div *ngIf="emailConfigForm.get('port')?.touched && emailConfigForm.get('port')?.invalid" class="invalid-feedback">
+                المنفذ مطلوب ويجب أن يكون رقماً
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="username" class="form-label">اسم المستخدم *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="username" 
+                formControlName="username"
+                [ngClass]="{'is-invalid': emailConfigForm.get('username')?.touched && emailConfigForm.get('username')?.invalid}"
+              >
+              <div *ngIf="emailConfigForm.get('username')?.touched && emailConfigForm.get('username')?.invalid" class="invalid-feedback">
+                اسم المستخدم مطلوب
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="password" class="form-label">كلمة المرور {{ emailConfigForm.get('password')?.value ? '' : '(لن يتم تغييرها إذا تركت فارغة)' }}</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                id="password" 
+                formControlName="password"
+              >
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="encryption" class="form-label">التشفير</label>
+            <select class="form-select" id="encryption" formControlName="encryption">
+              <option *ngFor="let type of encryptionTypes" [value]="type.value">{{ type.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- API-based providers (SendGrid, Mailgun, etc.) -->
+        <div *ngIf="emailConfigForm.get('provider')?.value !== 'smtp'">
+          <div class="mb-3" *ngIf="['sendgrid', 'mailgun', 'ses'].includes(emailConfigForm.get('provider')?.value)">
+            <label for="api_key" class="form-label">مفتاح API *</label>
+            <input 
+              type="password" 
+              class="form-control" 
+              id="api_key" 
+              formControlName="api_key"
+              [ngClass]="{'is-invalid': emailConfigForm.get('api_key')?.touched && emailConfigForm.get('api_key')?.invalid}"
+            >
+            <div *ngIf="emailConfigForm.get('api_key')?.touched && emailConfigForm.get('api_key')?.invalid" class="invalid-feedback">
+              مفتاح API مطلوب
+            </div>
+          </div>
+
+          <div class="mb-3" *ngIf="emailConfigForm.get('provider')?.value === 'mailgun'">
+            <label for="api_secret" class="form-label">كلمة سر API *</label>
+            <input 
+              type="password" 
+              class="form-control" 
+              id="api_secret" 
+              formControlName="api_secret"
+              [ngClass]="{'is-invalid': emailConfigForm.get('api_secret')?.touched && emailConfigForm.get('api_secret')?.invalid}"
+            >
+            <div *ngIf="emailConfigForm.get('api_secret')?.touched && emailConfigForm.get('api_secret')?.invalid" class="invalid-feedback">
+              كلمة سر API مطلوبة
+            </div>
+          </div>
+        </div>
+
+        <!-- Common settings for all providers -->
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="from_email" class="form-label">البريد الإلكتروني المرسل *</label>
+            <input 
+              type="email" 
+              class="form-control" 
+              id="from_email" 
+              formControlName="from_email"
+              placeholder="noreply@example.com"
+              [ngClass]="{'is-invalid': emailConfigForm.get('from_email')?.touched && emailConfigForm.get('from_email')?.invalid}"
+            >
+            <div *ngIf="emailConfigForm.get('from_email')?.touched && emailConfigForm.get('from_email')?.invalid" class="invalid-feedback">
+              <div *ngIf="emailConfigForm.get('from_email')?.errors?.['required']">البريد الإلكتروني المرسل مطلوب</div>
+              <div *ngIf="emailConfigForm.get('from_email')?.errors?.['email']">يرجى إدخال بريد إلكتروني صحيح</div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="from_name" class="form-label">اسم المرسل *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="from_name" 
+              formControlName="from_name"
+              placeholder="اسم الشركة"
+              [ngClass]="{'is-invalid': emailConfigForm.get('from_name')?.touched && emailConfigForm.get('from_name')?.invalid}"
+            >
+            <div *ngIf="emailConfigForm.get('from_name')?.touched && emailConfigForm.get('from_name')?.invalid" class="invalid-feedback">
+              اسم المرسل مطلوب
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="reply_to" class="form-label">البريد الإلكتروني للرد (اختياري)</label>
+          <input 
+            type="email" 
+            class="form-control" 
+            id="reply_to" 
+            formControlName="reply_to"
+            placeholder="support@example.com"
+            [ngClass]="{'is-invalid': emailConfigForm.get('reply_to')?.touched && emailConfigForm.get('reply_to')?.invalid}"
+          >
+          <div *ngIf="emailConfigForm.get('reply_to')?.touched && emailConfigForm.get('reply_to')?.invalid" class="invalid-feedback">
+            يرجى إدخال بريد إلكتروني صحيح
+          </div>
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            حفظ الإعدادات
+          </button>
+        </div>
+      </form>
+
+      <!-- Test Email Section -->
+      <div class="mt-5">
+        <h3>اختبار إعدادات البريد الإلكتروني</h3>
+        <p class="text-muted">أرسل بريداً إلكترونياً تجريبياً للتأكد من صحة الإعدادات</p>
+        
+        <div *ngIf="testError" class="alert alert-danger">{{ testError }}</div>
+        <div *ngIf="testSuccess" class="alert alert-success">{{ testSuccess }}</div>
+        
+        <form [formGroup]="testEmailForm" (ngSubmit)="testEmailConfig()">
+          <div class="mb-3">
+            <label for="recipient_email" class="form-label">البريد الإلكتروني المستلم *</label>
+            <input 
+              type="email" 
+              class="form-control" 
+              id="recipient_email" 
+              formControlName="recipient_email"
+              placeholder="your@email.com"
+              [ngClass]="{'is-invalid': testEmailForm.get('recipient_email')?.touched && testEmailForm.get('recipient_email')?.invalid}"
+            >
+            <div *ngIf="testEmailForm.get('recipient_email')?.touched && testEmailForm.get('recipient_email')?.invalid" class="invalid-feedback">
+              <div *ngIf="testEmailForm.get('recipient_email')?.errors?.['required']">البريد الإلكتروني المستلم مطلوب</div>
+              <div *ngIf="testEmailForm.get('recipient_email')?.errors?.['email']">يرجى إدخال بريد إلكتروني صحيح</div>
+            </div>
+          </div>
+          
+          <div class="d-grid">
+            <button type="submit" class="btn btn-outline-primary" [disabled]="testLoading">
+              <span *ngIf="testLoading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              إرسال بريد تجريبي
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
